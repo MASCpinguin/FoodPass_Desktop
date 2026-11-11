@@ -36,3 +36,4 @@ python -m foodpass_desktop
 ## Equipo
 
 - Sebastian Reyes Gómez
+- Edwin David 

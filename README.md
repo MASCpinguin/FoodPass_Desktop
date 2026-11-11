@@ -32,5 +32,8 @@ python -m foodpass_desktop
 5. Abre un Pull Request hacia `develop` y pide revisión
 6. Nunca hagas push directo a `main` ni a `develop`
 
-##Equipo
+## Equipo
+
+- Sebastian Reyes Gómez
+- Edwin David
 - Marco Antonio Angulo

@@ -26,9 +26,9 @@ python -m foodpass_desktop
 
 ## Flujo de trabajo
 1. Actualiza develop: `git checkout develop` y `git pull`
-2. Crea tu rama: `git checkout -b feature/HU-XX-descripcion`
-3. Haz commits con prefijo: `feat:`, `fix:`, `chore:`, `docs:`
-4. Sube tu rama: `git push -u origin feature/HU-XX-descripcion`
+2. Crea tu rama con el ID de la tarea: `git checkout -b feature/T09-ventanilla`
+3. Commits en español con el ID: `T09: selector de servicio con F5, F6 y F7`
+4. Sube tu rama: `git push -u origin feature/T09-ventanilla`
 5. Abre un Pull Request hacia `develop` y pide revisión
 6. Nunca hagas push directo a `main` ni a `develop`
 

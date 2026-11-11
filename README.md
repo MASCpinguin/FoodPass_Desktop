@@ -20,8 +20,36 @@ copy .env.example .env
 > Clona el proyecto fuera de OneDrive (por ejemplo en `C:\dev`).
 
 ## Ejecutar
+## Servidor simulado de la API
+Mientras la API central no esté lista, trabajamos contra un servidor simulado que responde como el 05 Contrato de endpoints.
+
+Instalar las dependencias de desarrollo (una sola vez):
 ```bat
-python -m foodpass_desktop
+pip install -r requirements-dev.txt
+```
+
+Arrancarlo en una terminal aparte (queda corriendo; se apaga con Ctrl + C):
+```bat
+python -m tools.mock_api
+```
+
+En el `.env`: `API_URL=http://localhost:8000/api/v1/escritorio`
+
+Datos de prueba:
+| Caso | Dato |
+|---|---|
+| Operador válido | `operador@foodpass.co` / `123456` |
+| Cuenta sin rol de cafetería (error 403) | `sinrol@foodpass.co` / `123456` |
+| Beneficiarios (QR = usuario_id) | 1001 a 1020 · inactivos: 1005, 1010, 1015, 1020 · sin foto: 1003, 1006, 1009… |
+
+Tres contraseñas erradas seguidas bloquean la cuenta 5 minutos (error 423). Los datos se reinician al apagar el servidor.
+
+Endpoints disponibles: `GET /estado`, `POST /auth/login`, `POST /auth/renovar`, `POST /auth/logout`.
+
+Pruebas:
+```bat
+python -m pytest
+```
 ```
 
 ## Flujo de trabajo

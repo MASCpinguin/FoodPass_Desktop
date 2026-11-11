@@ -37,3 +37,4 @@ python -m foodpass_desktop
 - Sebastian Reyes Gómez
 - Edwin David
 - Marco Antonio Angulo
+- Juan Jose Martinez

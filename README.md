@@ -37,6 +37,7 @@ python -m foodpass_desktop
 - Sebastian Reyes Gómez
 - Edwin David
 - Marco Antonio Angulo
+<<<<<<< HEAD
 
 
 
@@ -132,3 +133,6 @@ Cuando se crea o actualiza un Pull Request dirigido a la rama `develop`, se ejec
 2. Las pruebas automatizadas mediante Pytest.
 
 Si alguna de estas verificaciones falla, GitHub marcará el proceso de integración continua como fallido.
+=======
+- Juan Jose Martinez
+>>>>>>> origin/develop

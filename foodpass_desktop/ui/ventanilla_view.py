@@ -1,4 +1,5 @@
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -22,6 +23,7 @@ class VentanillaView(QWidget):
     self.timer_limpieza.timeout.connect(self.limpiar_tarjeta_auto)
 
     self.setup_ui()
+    self.registrar_atajos()
 
   def setup_ui(self):
     main_layout = QVBoxLayout(self)
@@ -69,6 +71,22 @@ class VentanillaView(QWidget):
     self.timer_foco.setInterval(500)
     self.timer_foco.timeout.connect(self.verificar_foco)
     self.timer_foco.start()
+
+  def registrar_atajos(self):
+    """Configura los atajos de teclado globales (F5, F6, F7) para cambiar de servicio."""
+    self.shortcut_f5 = QShortcut(QKeySequence(Qt.Key_F5), self)
+    self.shortcut_f5.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f5.activated.connect(lambda: self.seleccionar_servicio("Desayuno"))
+
+    self.shortcut_f6 = QShortcut(QKeySequence(Qt.Key_F6), self)
+    self.shortcut_f6.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f6.activated.connect(lambda: self.seleccionar_servicio("Almuerzo"))
+
+    self.shortcut_f7 = QShortcut(QKeySequence(Qt.Key_F7), self)
+    self.shortcut_f7.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f7.activated.connect(
+        lambda: self.seleccionar_servicio("Refrigerio")
+    )
 
   def seleccionar_servicio(self, servicio):
     self.servicio_actual = servicio
@@ -127,19 +145,3 @@ class VentanillaView(QWidget):
   def verificar_foco(self):
     if self.servicio_actual and not self.input_codigo.hasFocus():
       self.input_codigo.setFocus()
-
-      from PySide6.QtGui import QKeySequence, QShortcut  # Asegúrate de importar esto
-
-
-# Dentro de setup_ui() o al final del __init__ de VentanillaView:
-def registrar_atajos(self):
-  self.shortcut_f5 = QShortcut(QKeySequence(Qt.Key_F5), self)
-  self.shortcut_f5.activated.connect(lambda: self.seleccionar_servicio("Desayuno"))
-
-  self.shortcut_f6 = QShortcut(QKeySequence(Qt.Key_F6), self)
-  self.shortcut_f6.activated.connect(lambda: self.seleccionar_servicio("Almuerzo"))
-
-  self.shortcut_f7 = QShortcut(QKeySequence(Qt.Key_F7), self)
-  self.shortcut_f7.activated.connect(
-      lambda: self.seleccionar_servicio("Refrigerio")
-  )

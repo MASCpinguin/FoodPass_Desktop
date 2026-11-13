@@ -1,26 +1,19 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow
-from foodpass_desktop.ui.ventanilla_view import VentanillaView
+from pathlib import Path
 
+from PySide6.QtWidgets import QApplication
 
-class MainWindow(QMainWindow):
-
-  def __init__(self):
-    super().__init__()
-    self.setWindowTitle("FoodPass - Ventanilla de Priorización")
-    self.resize(1000, 700)
-
-    # Cargar la vista de la ventanilla como componente central
-    self.ventanilla_widget = VentanillaView(self)
-    self.setCentralWidget(self.ventanilla_widget)
+from foodpass_desktop.ui.ventana_principal import VentanaPrincipal
 
 
 def main():
-  app = QApplication(sys.argv)
-  window = MainWindow()
-  window.show()
-  sys.exit(app.exec())
+    app = QApplication(sys.argv)
+    tema = Path(__file__).resolve().parent / "resources" / "tema.qss"
+    app.setStyleSheet(tema.read_text(encoding="utf-8"))
+    window = VentanaPrincipal()
+    window.show()
+    return app.exec()
 
 
 if __name__ == "__main__":
-  main()
+    sys.exit(main())

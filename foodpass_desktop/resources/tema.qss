@@ -1,0 +1,25 @@
+QWidget { font-family: "Segoe UI", "Arial", sans-serif; font-size: 14px; color: #263a2c; }
+QWidget#contenedorPrincipal, QStackedWidget#areaContenido { background: #f1f5e7; }
+QFrame#barraLateral { background: #1e3527; border: 0; }
+QLabel#marca { color: #ffffff; font-size: 25px; font-weight: 700; }
+QLabel#subtituloMarca, QLabel#pieBarra { color: #dce9d5; font-size: 10px; font-weight: 600; }
+QLabel#tituloPantalla { color: #1e3527; font-size: 30px; font-weight: 700; }
+QLabel#descripcionPantalla { color: #4a5c4b; font-size: 14px; }
+QPushButton { background: #ffffff; color: #263a2c; border: 1px solid #9daf99; border-radius: 7px; min-height: 44px; padding: 0 14px; font-weight: 600; }
+QPushButton:hover { background: #e2ebd8; }
+QPushButton:focus { border: 2px solid #1d4d32; }
+QPushButton:checked { background: #284c34; color: white; }
+QPushButton:disabled { color: #59665b; background: #e2e6de; }
+QPushButton#botonNavegacion { text-align: left; background: transparent; color: #f5f8ef; border: 1px solid transparent; }
+QPushButton#botonNavegacion:hover { background: #345541; }
+QPushButton#botonNavegacion:checked { background: #f2c19c; color: #263a2c; }
+QPushButton#botonNavegacion:focus { border: 2px solid #ffffff; }
+QPushButton[variante="principal"] { background: #b74a12; color: white; border: 1px solid #b74a12; }
+QPushButton[variante="principal"]:hover { background: #93380c; }
+QPushButton[variante="secundario"] { background: white; color: #264d32; border: 1px solid #264d32; }
+QLineEdit, QTextEdit, QComboBox { background: white; color: #263a2c; border: 1px solid #8a9e89; border-radius: 6px; padding: 8px; min-height: 26px; selection-background-color: #315d3c; selection-color: white; }
+QLineEdit:focus, QTextEdit:focus, QComboBox:focus { border: 2px solid #315d3c; }
+QLineEdit:disabled { background: #e6eae2; color: #59665b; }
+QFrame#tarjeta { background: white; border: 1px solid #d4dfcc; border-radius: 10px; }
+QTableView, QTableWidget { background: white; color: #263a2c; border: 1px solid #d4dfcc; gridline-color: #d4dfcc; selection-background-color: #315d3c; selection-color: white; }
+QHeaderView::section { background: #e2ebd8; color: #263a2c; padding: 8px; border: 0; border-bottom: 1px solid #b5c5ad; font-weight: 600; }

@@ -75,15 +75,15 @@ class VentanillaView(QWidget):
   def registrar_atajos(self):
     """Configura los atajos de teclado globales (F5, F6, F7) para cambiar de servicio."""
     self.shortcut_f5 = QShortcut(QKeySequence(Qt.Key_F5), self)
-    self.shortcut_f5.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f5.setContext(Qt.WidgetWithChildrenShortcut)
     self.shortcut_f5.activated.connect(lambda: self.seleccionar_servicio("Desayuno"))
 
     self.shortcut_f6 = QShortcut(QKeySequence(Qt.Key_F6), self)
-    self.shortcut_f6.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f6.setContext(Qt.WidgetWithChildrenShortcut)
     self.shortcut_f6.activated.connect(lambda: self.seleccionar_servicio("Almuerzo"))
 
     self.shortcut_f7 = QShortcut(QKeySequence(Qt.Key_F7), self)
-    self.shortcut_f7.setContext(Qt.ApplicationShortcut)
+    self.shortcut_f7.setContext(Qt.WidgetWithChildrenShortcut)
     self.shortcut_f7.activated.connect(
         lambda: self.seleccionar_servicio("Refrigerio")
     )
@@ -143,5 +143,5 @@ class VentanillaView(QWidget):
     self.tarjeta.limpiar()
 
   def verificar_foco(self):
-    if self.servicio_actual and not self.input_codigo.hasFocus():
+    if self.isVisible() and self.servicio_actual and not self.input_codigo.hasFocus():
       self.input_codigo.setFocus()

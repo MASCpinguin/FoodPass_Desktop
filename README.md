@@ -20,6 +20,38 @@ copy .env.example .env
 > Clona el proyecto fuera de OneDrive (por ejemplo en `C:\dev`).
 
 ## Ejecutar
+
+```bat
+python -m foodpass_desktop
+```
+
+## Navegación y componentes visuales
+
+La ventana está en `foodpass_desktop/ui/ventana_principal.py` y el tema en `foodpass_desktop/resources/tema.qss`. Cada pantalla es un `QWidget`. Para conectar un módulo existente, impórtalo y reemplaza la página en el constructor después del bucle de `PANTALLAS`:
+
+```python
+from foodpass_desktop.ui.mi_pantalla import MiPantalla
+# Dentro de VentanaPrincipal.__init__, después de crear las páginas:
+self.reemplazar_pantalla("productos", MiPantalla())
+```
+
+Para añadir una opción nueva, agrega `(clave, título)` a `PANTALLAS` y sustituye su página con `reemplazar_pantalla`. La clave debe ser única. Ventanilla conserva la vista que ya estaba en `develop`; las demás son espacios pendientes. El inicio de sesión se integrará por separado.
+
+Los componentes se importan desde `foodpass_desktop.ui.widgets`:
+
+```python
+from foodpass_desktop.ui.widgets import BotonPrincipal, BotonSecundario, CampoTexto, Tarjeta
+
+confirmar = BotonPrincipal("Confirmar")
+cancelar = BotonSecundario("Cancelar")
+buscar = CampoTexto("Buscar producto")
+tarjeta = Tarjeta()
+tarjeta.layout().addWidget(buscar)
+tarjeta.layout().addWidget(confirmar)
+```
+
+La aplicación carga `tema.qss` al iniciar. Los módulos deben evitar estilos propios que impidan aplicar la paleta compartida.
+
 ## Servidor simulado de la API
 Mientras la API central no esté lista, trabajamos contra un servidor simulado que responde como el 05 Contrato de endpoints.
 
@@ -49,7 +81,6 @@ Endpoints disponibles: `GET /estado`, `POST /auth/login`, `POST /auth/renovar`, 
 Pruebas:
 ```bat
 python -m pytest
-```
 ```
 
 ## Flujo de trabajo

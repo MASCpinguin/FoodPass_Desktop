@@ -1,7 +1,8 @@
 ## ¿Qué hace este PR?
 
 ## Historia / requisito
-HU-__ (RF-ES__)
+Tarea: T__ · Historia: HU-__ · Requisito: RF-ES__
+Closes #__
 
 ## ¿Cómo probarlo?
 

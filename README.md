@@ -20,6 +20,11 @@ copy .env.example .env
 > Clona el proyecto fuera de OneDrive (por ejemplo en `C:\dev`).
 
 ## Ejecutar
+Con el entorno virtual activado (`.venv\Scripts\activate`):
+```bat
+python -m foodpass_desktop
+```
+
 ## Servidor simulado de la API
 Mientras la API central no esté lista, trabajamos contra un servidor simulado que responde como el 05 Contrato de endpoints.
 
@@ -33,7 +38,10 @@ Arrancarlo en una terminal aparte (queda corriendo; se apaga con Ctrl + C):
 python -m tools.mock_api
 ```
 
-En el `.env`: `API_URL=http://localhost:8000/api/v1/escritorio`
+En el `.env`: `API_URL=http://127.0.0.1:8000/api/v1/escritorio`
+
+> Usa `127.0.0.1` y no `localhost`: en algunos Windows `localhost` apunta a la dirección IPv6 (`::1`) y el servidor simulado, que escucha en `127.0.0.1`, rechaza la conexión.
+> Si cambias el `.env` con una terminal de VS Code abierta, abre una terminal nueva: la anterior conserva el valor viejo.
 
 Datos de prueba:
 | Caso | Dato |
@@ -50,7 +58,6 @@ Pruebas:
 ```bat
 python -m pytest
 ```
-```
 
 ## Flujo de trabajo
 1. Actualiza develop: `git checkout develop` y `git pull`
@@ -65,9 +72,7 @@ python -m pytest
 - Sebastian Reyes Gómez
 - Edwin David
 - Marco Antonio Angulo
-<<<<<<< HEAD
-
-
+- Juan Jose Martinez
 
 ## Estructura del proyecto
 
@@ -161,6 +166,3 @@ Cuando se crea o actualiza un Pull Request dirigido a la rama `develop`, se ejec
 2. Las pruebas automatizadas mediante Pytest.
 
 Si alguna de estas verificaciones falla, GitHub marcará el proceso de integración continua como fallido.
-=======
-- Juan Jose Martinez
->>>>>>> origin/develop

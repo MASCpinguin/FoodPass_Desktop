@@ -57,8 +57,8 @@ class ClienteDemo:
 
 
 def main():
-    load_dotenv()
-    url = os.getenv("API_URL", "http://localhost:8000/api/v1/escritorio")
+    load_dotenv(override=True)  # el .env manda sobre la terminal
+    url = os.getenv("API_URL", "http://127.0.0.1:8000/api/v1/escritorio")
     cliente = ClienteDemo(url)
     try:
         cliente.login("operador@foodpass.co", "123456")

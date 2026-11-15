@@ -112,3 +112,11 @@ def test_error_sin_json_usa_codigo_generico(cliente, monkeypatch):
     with pytest.raises(ApiError) as e:
         cliente.get("/productos")
     assert e.value.codigo == "HTTP_500"
+
+
+
+
+
+def test_respuesta_204_sin_cuerpo_devuelve_vacio(cliente, monkeypatch):
+    simular(cliente, monkeypatch, RespuestaFalsa(204, json_invalido=True))
+    assert cliente.post("/auth/logout") == {}

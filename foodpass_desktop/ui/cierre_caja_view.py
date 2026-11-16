@@ -5,23 +5,23 @@ Muestra el resumen del día calculado por la API y cierra la caja en 2 clics:
 plano para no congelar la ventana (RNF-ES03).
 """
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMessageBox,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
+from foodpass_desktop.api.trabajador import ejecutar_en_segundo_plano
 from foodpass_desktop.services.caja_service import ErrorCaja, formato_pesos
+from foodpass_desktop.ui.widgets import BotonPrincipal, BotonSecundario, CampoTexto
 
-# Colores del 04 Manual de diseño (sección 3.1).
-# Pasarlos a resources/styles/tokens.py cuando se fusione T02.
+# Colores de las tarjetas (04 Manual de diseño, sección 3.1). Los botones,
+# campos y títulos toman su estilo de resources/tema.qss (T02).
 C = {
     "fondo": "#EEFDD6",
     "blanco": "#FFFFFF",
@@ -53,30 +53,6 @@ def fecha_larga(fecha):
     return f"{DIAS[fecha.weekday()]} {fecha.day} de {MESES[fecha.month - 1]} de {fecha.year}"
 
 
-class _Senales(QObject):
-    listo = Signal(object)
-    fallo = Signal(object)
-
-
-class _Tarea(QRunnable):
-    """Ejecuta una función en segundo plano y avisa con señales."""
-
-    def __init__(self, funcion, *args, **kwargs):
-        super().__init__()
-        self.funcion = funcion
-        self.args = args
-        self.kwargs = kwargs
-        self.senales = _Senales()
-
-    def run(self):
-        try:
-            resultado = self.funcion(*self.args, **self.kwargs)
-        except Exception as exc:  # se muestra en la pantalla
-            self.senales.fallo.emit(exc)
-        else:
-            self.senales.listo.emit(resultado)
-
-
 def _tarjeta(oscura=False):
     marco = QFrame()
     fondo = C["verde_bosque"] if oscura else C["blanco"]
@@ -106,15 +82,12 @@ class CierreCajaView(QWidget):
         super().__init__(parent)
         self.servicio = servicio
         self.resumen = None
-        self.pool = QThreadPool.globalInstance()
-        self._tareas = set()  # evita que Python libere una tarea en curso
-        self.setObjectName("cierreCaja")
-        self.setAttribute(Qt.WA_StyledBackground, True)  # pinta el fondo del QSS
-        self.setStyleSheet(
-            f"#cierreCaja {{ background: {C['fondo']}; }}"
-            " QLabel { font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; }"
-        )
+        self._cargando = False
         self._construir()
+
+    def showEvent(self, evento):
+        """Pide el resumen cada vez que se abre la pantalla, no al arrancar la app."""
+        super().showEvent(evento)
         self.cargar()
 
     # ---------- Construcción ----------
@@ -127,8 +100,11 @@ class CierreCajaView(QWidget):
         encabezado = QHBoxLayout()
         titulos = QVBoxLayout()
         titulos.setSpacing(2)
-        titulos.addWidget(_etiqueta("Cierre de caja", 28, 800))
-        self.lbl_fecha = _etiqueta("Cargando…", 15, 500, C["texto_2"])
+        titulo = QLabel("Cierre de caja")
+        titulo.setObjectName("tituloPantalla")
+        titulos.addWidget(titulo)
+        self.lbl_fecha = QLabel("Cargando…")
+        self.lbl_fecha.setObjectName("descripcionPantalla")
         titulos.addWidget(self.lbl_fecha)
         encabezado.addLayout(titulos)
         encabezado.addStretch()
@@ -208,38 +184,18 @@ class CierreCajaView(QWidget):
         # Observación y acciones
         acciones = QHBoxLayout()
         acciones.setSpacing(12)
-        self.txt_observacion = QLineEdit()
-        self.txt_observacion.setPlaceholderText("Observación del cierre (opcional)")
+        self.txt_observacion = CampoTexto("Observación del cierre (opcional)")
         self.txt_observacion.setMaxLength(200)
-        self.txt_observacion.setMinimumHeight(48)
-        self.txt_observacion.setStyleSheet(
-            f"QLineEdit {{ background: {C['verde_claro']}; border: none; border-radius: 10px;"
-            f" padding: 0 14px; font-size: 14px; color: {C['texto']}; }}"
-        )
         acciones.addWidget(self.txt_observacion, 1)
 
-        self.btn_actualizar = QPushButton("Actualizar")
-        self.btn_actualizar.setMinimumHeight(48)
+        self.btn_actualizar = BotonSecundario("Actualizar")
         self.btn_actualizar.setCursor(Qt.PointingHandCursor)
-        self.btn_actualizar.setStyleSheet(
-            f"QPushButton {{ background: {C['verde_claro']}; color: {C['texto']};"
-            " border: none; border-radius: 10px; padding: 0 20px; font-size: 14px;"
-            " font-weight: 700; }"
-            f" QPushButton:disabled {{ color: {C['texto_2']}; }}"
-        )
         self.btn_actualizar.clicked.connect(self.cargar)
         acciones.addWidget(self.btn_actualizar)
 
-        self.btn_cerrar = QPushButton("Cerrar caja")
-        self.btn_cerrar.setMinimumHeight(48)
+        self.btn_cerrar = BotonPrincipal("Cerrar caja")
         self.btn_cerrar.setMinimumWidth(180)
         self.btn_cerrar.setCursor(Qt.PointingHandCursor)
-        self.btn_cerrar.setStyleSheet(
-            f"QPushButton {{ background: {C['naranja']}; color: {C['texto_naranja']};"
-            " border: none; border-radius: 10px; padding: 0 24px; font-size: 15px;"
-            " font-weight: 800; }"
-            f" QPushButton:disabled {{ background: {C['gris_chip']}; color: {C['gris_texto']}; }}"
-        )
         self.btn_cerrar.clicked.connect(self.confirmar_cierre)
         acciones.addWidget(self.btn_cerrar)
         raiz.addLayout(acciones)
@@ -252,7 +208,9 @@ class CierreCajaView(QWidget):
 
     # ---------- Datos ----------
     def cargar(self):
-        """Pide a la API el resumen del día."""
+        """Pide a la API el resumen del día (sin lanzar dos consultas a la vez)."""
+        if self._cargando:
+            return
         self._ocupado(True)
         self._ejecutar(self.servicio.obtener_resumen, self._mostrar_resumen, self._mostrar_error)
 
@@ -334,16 +292,10 @@ class CierreCajaView(QWidget):
 
     # ---------- Apoyo ----------
     def _ejecutar(self, funcion, al_terminar, al_fallar, *args, **kwargs):
-        tarea = _Tarea(funcion, *args, **kwargs)
-        self._tareas.add(tarea)
-        tarea.senales.listo.connect(al_terminar)
-        tarea.senales.fallo.connect(al_fallar)
-        tarea.senales.listo.connect(lambda _: self._tareas.discard(tarea))
-        tarea.senales.fallo.connect(lambda _: self._tareas.discard(tarea))
-        tarea.setAutoDelete(False)
-        self.pool.start(tarea)
+        ejecutar_en_segundo_plano(funcion, *args, al_exito=al_terminar, al_error=al_fallar, **kwargs)
 
     def _ocupado(self, ocupado):
+        self._cargando = ocupado
         self.btn_actualizar.setEnabled(not ocupado)
         self.btn_cerrar.setEnabled(not ocupado)
         if ocupado:

@@ -20,6 +20,38 @@ copy .env.example .env
 > Clona el proyecto fuera de OneDrive (por ejemplo en `C:\dev`).
 
 ## Ejecutar
+Con el entorno virtual activado (`.venv\Scripts\activate`):
+```bat
+python -m foodpass_desktop
+```
+
+## Navegación y componentes visuales
+
+La ventana está en `foodpass_desktop/ui/ventana_principal.py` y el tema en `foodpass_desktop/resources/tema.qss`. Cada pantalla es un `QWidget`. Para conectar un módulo existente, impórtalo y reemplaza la página en el constructor después del bucle de `PANTALLAS`:
+
+```python
+from foodpass_desktop.ui.mi_pantalla import MiPantalla
+# Dentro de VentanaPrincipal.__init__, después de crear las páginas:
+self.reemplazar_pantalla("productos", MiPantalla())
+```
+
+Para añadir una opción nueva, agrega `(clave, título)` a `PANTALLAS` y sustituye su página con `reemplazar_pantalla`. La clave debe ser única. Ventanilla conserva la vista que ya estaba en `develop`; las demás son espacios pendientes. El inicio de sesión se integrará por separado.
+
+Los componentes se importan desde `foodpass_desktop.ui.widgets`:
+
+```python
+from foodpass_desktop.ui.widgets import BotonPrincipal, BotonSecundario, CampoTexto, Tarjeta
+
+confirmar = BotonPrincipal("Confirmar")
+cancelar = BotonSecundario("Cancelar")
+buscar = CampoTexto("Buscar producto")
+tarjeta = Tarjeta()
+tarjeta.layout().addWidget(buscar)
+tarjeta.layout().addWidget(confirmar)
+```
+
+La aplicación carga `tema.qss` al iniciar. Los módulos deben evitar estilos propios que impidan aplicar la paleta compartida.
+
 ## Servidor simulado de la API
 Mientras la API central no esté lista, trabajamos contra un servidor simulado que responde como el 05 Contrato de endpoints.
 
@@ -33,7 +65,10 @@ Arrancarlo en una terminal aparte (queda corriendo; se apaga con Ctrl + C):
 python -m tools.mock_api
 ```
 
-En el `.env`: `API_URL=http://localhost:8000/api/v1/escritorio`
+En el `.env`: `API_URL=http://127.0.0.1:8000/api/v1/escritorio`
+
+> Usa `127.0.0.1` y no `localhost`: en algunos Windows `localhost` apunta a la dirección IPv6 (`::1`) y el servidor simulado, que escucha en `127.0.0.1`, rechaza la conexión.
+> Si cambias el `.env` con una terminal de VS Code abierta, abre una terminal nueva: la anterior conserva el valor viejo.
 
 Datos de prueba:
 | Caso | Dato |
@@ -50,7 +85,6 @@ Pruebas:
 ```bat
 python -m pytest
 ```
-```
 
 ## Flujo de trabajo
 1. Actualiza develop: `git checkout develop` y `git pull`
@@ -65,9 +99,7 @@ python -m pytest
 - Sebastian Reyes Gómez
 - Edwin David
 - Marco Antonio Angulo
-<<<<<<< HEAD
-
-
+- Juan Jose Martinez
 
 ## Estructura del proyecto
 
@@ -114,7 +146,7 @@ FoodPass_Desktop/
 - **storage:** gestiona los datos locales mediante SQLite, la cola de operaciones y la caché.
 - **models:** contiene los modelos que representan los datos utilizados por la aplicación.
 - **core:** centraliza la configuración y la gestión de sesiones.
-- **resources:** almacena los recursos necesarios para la interfaz, como imágenes e iconos.
+- **resources:** almacena los recursos necesarios para la interfaz, como hojas de estilo QSS, imágenes e iconos.
 - **tests:** contiene las pruebas automatizadas del proyecto.
 
 ## Herramientas de desarrollo y pruebas
@@ -161,6 +193,27 @@ Cuando se crea o actualiza un Pull Request dirigido a la rama `develop`, se ejec
 2. Las pruebas automatizadas mediante Pytest.
 
 Si alguna de estas verificaciones falla, GitHub marcará el proceso de integración continua como fallido.
-=======
-- Juan Jose Martinez
->>>>>>> origin/develop
+
+
+## Cliente de la API
+
+Toda llamada a la API pasa por `foodpass_desktop/api/cliente.py`. **Nadie usa `requests` directamente.**
+
+Desde una pantalla se llama en segundo plano, para no congelar la ventana:
+
+```python
+from foodpass_desktop.api.cliente import cliente
+from foodpass_desktop.api.errores import ApiError, SinConexionError
+from foodpass_desktop.api.trabajador import ejecutar_en_segundo_plano
+
+ejecutar_en_segundo_plano(
+    cliente.get, "/productos",
+    al_exito=self.mostrar_productos,   # método de la pantalla, no lambda
+    al_error=self.mostrar_error,
+)
+```
+
+- **Errores:** `ApiError` (el servidor respondió con error; decide con `error.codigo`, no con el mensaje) y `SinConexionError` (sin respuesta en 3 s; guardar la operación para enviarla después).
+- **Token:** tras el login, `cliente.establecer_token(datos["token"])`. Para renovarlo, usa `cliente.renovar()`: pide el token nuevo y lo guarda solo.
+- **Sesión vencida (401):** el cliente avisa con `cliente.al_expirar_sesion(callback)`. En `/auth/login` un 401 no cuenta: significa contraseña incorrecta.
+- **Probarlo:** `python -m tools.mock_api` y, en otra terminal, `python -m tools.ejemplo_estado`.

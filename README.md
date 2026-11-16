@@ -187,6 +187,6 @@ ejecutar_en_segundo_plano(
 ```
 
 - **Errores:** `ApiError` (el servidor respondió con error; decide con `error.codigo`, no con el mensaje) y `SinConexionError` (sin respuesta en 3 s; guardar la operación para enviarla después).
-- **Token:** tras el login, `cliente.establecer_token(datos["token"])`. Repetirlo después de `/auth/renovar`, porque el token anterior queda inválido.
+- **Token:** tras el login, `cliente.establecer_token(datos["token"])`. Para renovarlo, usa `cliente.renovar()`: pide el token nuevo y lo guarda solo.
 - **Sesión vencida (401):** el cliente avisa con `cliente.al_expirar_sesion(callback)`. En `/auth/login` un 401 no cuenta: significa contraseña incorrecta.
 - **Probarlo:** `python -m tools.mock_api` y, en otra terminal, `python -m tools.ejemplo_estado`.

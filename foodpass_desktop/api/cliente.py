@@ -9,7 +9,7 @@ from foodpass_desktop.api.errores import ApiError, SinConexionError
 try:
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(override=True)
 except ImportError:  # python-dotenv es opcional
     pass
 
@@ -48,6 +48,13 @@ class ClienteApi:
 
     def limpiar_token(self):
         self._token = None
+
+    def renovar(self):
+        """Renueva el token y lo guarda solo. Devuelve la respuesta."""
+        datos = self.post("/auth/renovar")
+        self.establecer_token(datos["token"])
+        return datos    
+     
 
     def al_expirar_sesion(self, callback):
         """Registra qué hacer ante un 401 (volver al inicio de sesión).

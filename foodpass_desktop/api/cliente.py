@@ -23,9 +23,7 @@ def _leer_url_base():
     return os.getenv("API_URL", "").strip() or URL_MOCK
 
 
-def usa_servidor_simulado():
-    """True si el .env pide el servidor simulado (USE_MOCK_API=true)."""
-    return os.getenv("USE_MOCK_API", "").strip().lower() in ("1", "true", "yes")
+
 
 def _leer_json(respuesta):
     try:

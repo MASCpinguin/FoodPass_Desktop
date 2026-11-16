@@ -193,3 +193,27 @@ Cuando se crea o actualiza un Pull Request dirigido a la rama `develop`, se ejec
 2. Las pruebas automatizadas mediante Pytest.
 
 Si alguna de estas verificaciones falla, GitHub marcará el proceso de integración continua como fallido.
+
+
+## Cliente de la API
+
+Toda llamada a la API pasa por `foodpass_desktop/api/cliente.py`. **Nadie usa `requests` directamente.**
+
+Desde una pantalla se llama en segundo plano, para no congelar la ventana:
+
+```python
+from foodpass_desktop.api.cliente import cliente
+from foodpass_desktop.api.errores import ApiError, SinConexionError
+from foodpass_desktop.api.trabajador import ejecutar_en_segundo_plano
+
+ejecutar_en_segundo_plano(
+    cliente.get, "/productos",
+    al_exito=self.mostrar_productos,   # método de la pantalla, no lambda
+    al_error=self.mostrar_error,
+)
+```
+
+- **Errores:** `ApiError` (el servidor respondió con error; decide con `error.codigo`, no con el mensaje) y `SinConexionError` (sin respuesta en 3 s; guardar la operación para enviarla después).
+- **Token:** tras el login, `cliente.establecer_token(datos["token"])`. Para renovarlo, usa `cliente.renovar()`: pide el token nuevo y lo guarda solo.
+- **Sesión vencida (401):** el cliente avisa con `cliente.al_expirar_sesion(callback)`. En `/auth/login` un 401 no cuenta: significa contraseña incorrecta.
+- **Probarlo:** `python -m tools.mock_api` y, en otra terminal, `python -m tools.ejemplo_estado`.

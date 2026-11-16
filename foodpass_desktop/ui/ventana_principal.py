@@ -4,6 +4,9 @@ from PySide6.QtWidgets import (QButtonGroup, QFrame, QHBoxLayout, QLabel,
                                QMainWindow, QPushButton, QStackedWidget,
                                QVBoxLayout, QWidget)
 
+from foodpass_desktop.api.cliente import cliente
+from foodpass_desktop.services.caja_service import CajaService
+from foodpass_desktop.ui.cierre_caja_view import CierreCajaView
 from foodpass_desktop.ui.ventanilla_view import VentanillaView
 
 PANTALLAS = (
@@ -32,6 +35,15 @@ def pantalla_pendiente(titulo):
     layout.addWidget(descripcion)
     layout.addStretch()
     return pantalla
+
+
+def crear_pagina(clave, titulo):
+    """Pantalla real si ya existe; si no, la página pendiente."""
+    if clave == "ventanilla":
+        return VentanillaView()
+    if clave == "reportes":
+        return CierreCajaView(CajaService(cliente))
+    return pantalla_pendiente(titulo)
 
 
 class VentanaPrincipal(QMainWindow):
@@ -76,7 +88,7 @@ class VentanaPrincipal(QMainWindow):
             self.grupo_navegacion.addButton(boton)
             self.botones[clave] = boton
             menu.addWidget(boton)
-            pagina = VentanillaView() if clave == "ventanilla" else pantalla_pendiente(titulo)
+            pagina = crear_pagina(clave, titulo)
             self.paginas[clave] = pagina
             self.contenido.addWidget(pagina)
         menu.addStretch()

@@ -9,7 +9,7 @@ from functools import wraps
 
 from flask import Flask, jsonify, request
 
-from .datos import OPERADORES
+from .datos import OPERADORES, movimientos_de_hoy
 
 BOGOTA = timezone(timedelta(hours=-5))
 PREFIJO = "/api/v1/escritorio"
@@ -23,6 +23,10 @@ app.json.ensure_ascii = False  # tildes legibles en las respuestas
 # Estado en memoria
 tokens = {}  # token -> {"operador": dict, "expira": datetime}
 intentos = {}  # email -> {"fallidos": int, "bloqueado_hasta": datetime | None}
+ventas = []  # ventas de mostrador (EP-19 las agregará aquí)
+canjes = []  # canjes (EP-05 los agregará aquí)
+pedidos_web = []
+cierres = {}  # "AAAA-MM-DD" -> cierre guardado (inmutable)
 
 
 def ahora():
@@ -53,6 +57,15 @@ def requiere_token(funcion):
         return funcion(*args, **kwargs)
 
     return envoltura
+
+
+def reiniciar_movimientos():
+    """Carga los movimientos de prueba del día y borra los cierres."""
+    v, c, p = movimientos_de_hoy(ahora().date())
+    ventas[:] = v
+    canjes[:] = c
+    pedidos_web[:] = p
+    cierres.clear()
 
 
 def crear_token(operador):
@@ -123,6 +136,79 @@ def logout():
     return "", 204
 
 
+# ---------- EP-24 · Resumen de caja ----------
+def fecha_consultada(valor):
+    """Fecha AAAA-MM-DD del parámetro o del cuerpo; hoy si no viene."""
+    if not valor:
+        return ahora().date().isoformat()
+    try:
+        return datetime.strptime(valor, "%Y-%m-%d").date().isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
+def resumen_del_dia(fecha):
+    """Calcula el resumen de caja de una fecha. Las anuladas no suman."""
+    por_metodo = {m: {"n": 0, "total": 0} for m in ("nequi", "transferencia", "efectivo")}
+    anuladas = {"n": 0, "total": 0}
+    for venta in (v for v in ventas if v["fecha"] == fecha):
+        destino = anuladas if venta["anulada"] else por_metodo[venta["metodo_pago"]]
+        destino["n"] += 1
+        destino["total"] += venta["total"]
+
+    por_servicio = {s: 0 for s in ("desayuno", "almuerzo", "refrigerio")}
+    for canje in (c for c in canjes if c["fecha"] == fecha and not c["anulado"]):
+        por_servicio[canje["servicio"]] += 1
+
+    atendidos = sum(
+        1 for p in pedidos_web if p["fecha"] == fecha and p["estado"] == "entregado"
+    )
+    return {
+        "fecha": fecha,
+        "ventas_por_metodo": por_metodo,
+        "total": sum(m["total"] for m in por_metodo.values()),
+        "n_ventas": sum(m["n"] for m in por_metodo.values()),
+        "canjes_por_servicio": por_servicio,
+        "pedidos_web_atendidos": atendidos,
+        "anuladas": anuladas,
+        "cerrada": fecha in cierres,
+    }
+
+
+@app.get(f"{PREFIJO}/caja/resumen")
+@requiere_token
+def caja_resumen():
+    fecha = fecha_consultada(request.args.get("fecha"))
+    if fecha is None:
+        return error(422, "DATOS_INVALIDOS", "La fecha debe tener el formato AAAA-MM-DD.")
+    return jsonify(resumen_del_dia(fecha))
+
+
+# ---------- EP-25 · Guardar el cierre del día ----------
+@app.post(f"{PREFIJO}/caja/cierres")
+@requiere_token
+def caja_cerrar():
+    datos = request.get_json(silent=True) or {}
+    fecha = fecha_consultada(datos.get("fecha"))
+    if fecha is None:
+        return error(422, "DATOS_INVALIDOS", "La fecha debe tener el formato AAAA-MM-DD.")
+    if fecha in cierres:
+        return error(409, "YA_CERRADA", "La caja de ese día ya está cerrada.",
+                     {"cierre_id": cierres[fecha]["id"]})
+
+    resumen = resumen_del_dia(fecha)
+    resumen.pop("cerrada")
+    cierre = {
+        "id": len(cierres) + 1,
+        **resumen,
+        "observacion": str(datos.get("observacion") or "").strip(),
+        "cerrado_por": request.operador["nombre"],
+        "creado": fecha_iso(ahora()),
+    }
+    cierres[fecha] = cierre
+    return jsonify({"cierre": cierre, "diferencias": None, "rechazados": []}), 201
+
+
 # ---------- Errores generales con el formato del contrato ----------
 @app.errorhandler(404)
 def no_encontrado(_):
@@ -132,3 +218,5 @@ def no_encontrado(_):
 @app.errorhandler(405)
 def metodo_no_permitido(_):
     return error(405, "METODO_NO_PERMITIDO", "Método no permitido para esta ruta.")
+
+reiniciar_movimientos()

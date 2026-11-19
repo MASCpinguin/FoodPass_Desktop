@@ -121,6 +121,7 @@ def test_sin_conexion_en_el_ciclo_no_pierde_ni_cuenta_intentos(
     cola = ColaSync(ruta)
     for i in range(3):
         cola.encolar("venta", {"n": i})
+    api_caida.establecer_token("token-cualquiera")  # hay sesión, no hay red
     resumen = Sincronizador(cola, api_caida).ciclo()
     assert resumen["detenido_por"] == "SIN_CONEXION"
     assert cola.contar("pendiente") == 3
@@ -147,4 +148,17 @@ def test_dos_ciclos_a_la_vez_no_se_solapan(ruta, api_viva):
 
 
 def test_uuid_nuevo_es_distinto_cada_vez():
-    assert nuevo_uuid() != nuevo_uuid()
+    assert nuevo_uuid() != nuevo_uuid() 
+
+    
+
+def test_sin_sesion_no_envia_ni_avisa_sesion_expirada(ruta, api_viva):
+    cola = ColaSync(ruta)
+    cola.encolar("venta", {})
+    api_viva.limpiar_token()
+    avisos = []
+    api_viva.al_expirar_sesion(lambda: avisos.append(1))
+    resumen = Sincronizador(cola, api_viva).ciclo()
+    assert resumen["detenido_por"] == "SIN_SESION"
+    assert avisos == []
+    assert cola.contar("pendiente") == 1

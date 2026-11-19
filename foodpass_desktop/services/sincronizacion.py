@@ -77,6 +77,12 @@ class Sincronizador:
         hace nada. Devuelve un resumen: enviados, fallidos, detenido_por.
         """
         resumen = {"enviados": 0, "fallidos": 0, "detenido_por": None}
+                # Sin sesión iniciada no se envía: un 401 aquí se confundiría con
+        # una sesión vencida y sacaría al operador de la aplicación.
+        if not getattr(self._api, "tiene_sesion", True):
+            resumen["detenido_por"] = "SIN_SESION"
+            return resumen
+        
         if not self._ciclo_activo.acquire(blocking=False):
             resumen["detenido_por"] = "CICLO_EN_CURSO"
             return resumen

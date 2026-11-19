@@ -221,3 +221,6 @@ __marimo__/
 
 # Configuración local del editor
 .vscode/
+
+# Cola local de sincronización
+cola_sync.db*

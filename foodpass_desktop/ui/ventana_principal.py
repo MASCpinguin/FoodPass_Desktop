@@ -1,5 +1,5 @@
 """Ventana compartida y puntos de integración de las pantallas."""
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QButtonGroup, QFrame, QHBoxLayout, QLabel,
                                QMainWindow, QPushButton, QStackedWidget,
                                QVBoxLayout, QWidget)
@@ -35,8 +35,12 @@ def pantalla_pendiente(titulo):
 
 
 class VentanaPrincipal(QMainWindow):
-    def __init__(self, parent=None):
+    # T05: la coordina core/sesion.py, que llama a /auth/logout y vuelve al login.
+    cerrar_sesion_solicitado = Signal()
+
+    def __init__(self, parent=None, operador=None):
         super().__init__(parent)
+        self.operador = operador or {}
         self.setWindowTitle("FoodPass · Escritorio")
         self.resize(1200, 700)
         self.setMinimumSize(900, 600)
@@ -80,12 +84,35 @@ class VentanaPrincipal(QMainWindow):
             self.paginas[clave] = pagina
             self.contenido.addWidget(pagina)
         menu.addStretch()
+        menu.addWidget(self._crear_tarjeta_operador())
+        menu.addSpacing(12)
         pie = QLabel("FOODPASS  /  ADSO")
         pie.setObjectName("pieBarra")
         menu.addWidget(pie)
         layout.addWidget(barra)
         layout.addWidget(self.contenido, 1)
         self.mostrar_pantalla("panel")
+
+    def _crear_tarjeta_operador(self):
+        """Nombre del operador y botón «Cerrar sesión» (T05 · RF-ES25)."""
+        tarjeta = QFrame()
+        tarjeta.setObjectName("tarjetaOperador")
+        caja = QVBoxLayout(tarjeta)
+        caja.setContentsMargins(14, 12, 14, 12)
+        caja.setSpacing(6)
+        etiqueta = QLabel("OPERADOR")
+        etiqueta.setObjectName("etiquetaOperador")
+        caja.addWidget(etiqueta)
+        self.nombre_operador = QLabel(self.operador.get("nombre") or "Sin sesión")
+        self.nombre_operador.setObjectName("nombreOperador")
+        self.nombre_operador.setWordWrap(True)
+        caja.addWidget(self.nombre_operador)
+        self.boton_cerrar_sesion = QPushButton("Cerrar sesión")
+        self.boton_cerrar_sesion.setObjectName("botonCerrarSesion")
+        self.boton_cerrar_sesion.setCursor(Qt.PointingHandCursor)
+        self.boton_cerrar_sesion.clicked.connect(self.cerrar_sesion_solicitado.emit)
+        caja.addWidget(self.boton_cerrar_sesion)
+        return tarjeta
 
     def mostrar_pantalla(self, clave):
         """Muestra una página registrada y actualiza la navegación."""

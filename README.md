@@ -35,7 +35,7 @@ from foodpass_desktop.ui.mi_pantalla import MiPantalla
 self.reemplazar_pantalla("productos", MiPantalla())
 ```
 
-Para añadir una opción nueva, agrega `(clave, título)` a `PANTALLAS` y sustituye su página con `reemplazar_pantalla`. La clave debe ser única. Ventanilla conserva la vista que ya estaba en `develop`; las demás son espacios pendientes. El inicio de sesión se integrará por separado.
+Para añadir una opción nueva, agrega `(clave, título)` a `PANTALLAS` y sustituye su página con `reemplazar_pantalla`. La clave debe ser única. Ventanilla conserva la vista que ya estaba en `develop`; las demás son espacios pendientes. La ventana principal solo se abre después del inicio de sesión (ver más abajo).
 
 Los componentes se importan desde `foodpass_desktop.ui.widgets`:
 
@@ -217,3 +217,24 @@ ejecutar_en_segundo_plano(
 - **Token:** tras el login, `cliente.establecer_token(datos["token"])`. Para renovarlo, usa `cliente.renovar()`: pide el token nuevo y lo guarda solo.
 - **Sesión vencida (401):** el cliente avisa con `cliente.al_expirar_sesion(callback)`. En `/auth/login` un 401 no cuenta: significa contraseña incorrecta.
 - **Probarlo:** `python -m tools.mock_api` y, en otra terminal, `python -m tools.ejemplo_estado`.
+
+
+## Inicio de sesión y bloqueo con PIN (T05 · RF-ES25)
+
+La app arranca en la pantalla de inicio de sesión (`ui/login_window.py`); la lógica está en `services/auth_service.py` y el flujo entre ventanas en `core/sesion.py`.
+
+- **Ingreso:** correo y contraseña de la cuenta FoodPass (`POST /auth/login`). Con el servidor simulado: `operador@foodpass.co` / `123456`.
+- **PIN:** la primera vez que alguien entra en el equipo crea un PIN de 4 a 6 dígitos. Tras `BLOQUEO_MINUTOS` sin usar el teclado ni el mouse (por defecto 5, en el `.env`), la ventana se oculta y pide el PIN. Cinco PIN errados borran el token y piden correo y contraseña.
+- **Token:** se guarda en el Administrador de credenciales de Windows con `keyring`, nunca en un archivo. Se renueva solo 5 min antes de vencer (`POST /auth/renovar`), así una jornada de 8 h no pide la contraseña otra vez.
+- **Cerrar sesión:** botón en la barra lateral (`POST /auth/logout`). Cerrar la app también revoca el token.
+
+| Respuesta | Mensaje |
+|---|---|
+| 401 `CREDENCIALES_INVALIDAS` | Correo o contraseña incorrectos. |
+| 423 `CUENTA_BLOQUEADA` | Cuenta bloqueada. Intenta de nuevo en m:ss (cuenta regresiva) |
+| 403 `SIN_ROL_CAFETERIA` | Esta cuenta no tiene acceso a la cafetería. |
+| Sin respuesta en 3 s | No hay conexión con el servidor. |
+
+Para ver el bloqueo rápido en una prueba manual, pon `BLOQUEO_MINUTOS=0.5` en el `.env`.
+
+Para borrar el PIN guardado (por ejemplo, para volver a crearlo): `python -c "import keyring; keyring.delete_password('FoodPass Escritorio', 'pin')"`.

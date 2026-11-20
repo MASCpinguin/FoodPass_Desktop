@@ -11,7 +11,12 @@ from datetime import datetime, timedelta
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-QtWidgets = pytest.importorskip("PySide6.QtWidgets")
+try:
+    from PySide6 import QtWidgets
+except ImportError as e:
+    # En el servidor de GitHub falta libEGL: PySide6 está instalado pero no
+    # carga. `importorskip` de pytest 9 solo salta si el módulo no existe.
+    pytest.skip(f"Qt no disponible en este equipo: {e}", allow_module_level=True)
 
 from PySide6.QtCore import QTimer  # noqa: E402
 

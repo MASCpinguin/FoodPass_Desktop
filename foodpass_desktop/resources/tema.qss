@@ -301,3 +301,170 @@ QPushButton#btnCancelarManual {
     font-size: 14px;
     font-weight: 700;
 }
+/* ==========================================================================
+   INICIO DE SESIÓN Y DESBLOQUEO CON PIN (T05) · MANUAL DE DISEÑO v2.1, FICHA 1
+   ========================================================================== */
+
+QWidget#vistaLogin {
+    background-color: #EEFDD6;
+}
+
+QFrame#panelMarcaLogin {
+    background-color: #243314;
+    border: none;
+}
+
+QLabel#marcaLogin {
+    color: #FFFFFF;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+QLabel#subtituloMarcaLogin, QLabel#pieMarcaLogin {
+    color: #9FB486;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Hero de acceso: 52 px peso 800 */
+QLabel#heroLogin {
+    color: #FFFFFF;
+    font-size: 52px;
+    font-weight: 800;
+}
+
+QLabel#descripcionMarcaLogin {
+    color: #C9D8B0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Tarjeta de acceso: blanca, radio 20 px */
+QFrame#tarjetaAcceso {
+    background-color: #FFFFFF;
+    border: none;
+    border-radius: 20px;
+}
+
+QLabel#tituloAcceso {
+    color: #1B2A0E;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+QLabel#descripcionAcceso {
+    color: #5B6B45;
+    font-size: 14px;
+}
+
+QLabel#etiquetaCampoLogin {
+    color: #5B6B45;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Campos de texto: 42–48 px, fondo #E2F3C5, radio 12 px */
+QLineEdit#campoLogin {
+    background-color: #E2F3C5;
+    color: #1B2A0E;
+    border: 2px solid #E2F3C5;
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLineEdit#campoLogin:focus {
+    border: 2px solid #FA7D2D;
+}
+
+QLineEdit#campoLogin:disabled {
+    background-color: #F1F8E4;
+    color: #5B6B45;
+}
+
+/* Campo de PIN: 64 px con borde naranja de 3 px */
+QLineEdit#campoPin {
+    background-color: #E2F3C5;
+    color: #1B2A0E;
+    border: 3px solid #FA7D2D;
+    border-radius: 14px;
+    min-height: 64px;
+    font-size: 26px;
+    font-weight: 800;
+}
+
+QLabel#mensajeLogin[tipo="error"] {
+    background-color: #FBE9E6;
+    color: #1B2A0E;
+    border: none;
+    border-left: 4px solid #C0392B;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Botón primario de la pantalla: naranja, texto #2B1600, radio 14 px */
+QWidget#vistaLogin QPushButton[variante="principal"] {
+    background-color: #FA7D2D;
+    color: #2B1600;
+    border: none;
+    border-radius: 14px;
+    min-height: 50px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QWidget#vistaLogin QPushButton[variante="principal"]:hover {
+    background-color: #E86D1F;
+}
+
+QWidget#vistaLogin QPushButton[variante="principal"]:disabled {
+    background-color: #F1F8E4;
+    color: #5B6B45;
+}
+
+QWidget#vistaLogin QPushButton[variante="secundario"] {
+    background-color: #E2F3C5;
+    color: #243314;
+    border: none;
+    border-radius: 12px;
+    min-height: 44px;
+    font-weight: 700;
+}
+
+/* Tarjeta del operador en la barra lateral */
+QFrame#tarjetaOperador {
+    background-color: #2F4219;
+    border: none;
+    border-radius: 14px;
+}
+
+QLabel#etiquetaOperador {
+    color: #9FB486;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+QLabel#nombreOperador {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+QPushButton#botonCerrarSesion {
+    background-color: transparent;
+    color: #C9D8B0;
+    border: 1px solid #3A4E24;
+    border-radius: 12px;
+    min-height: 36px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+QPushButton#botonCerrarSesion:hover {
+    background-color: #3A4E24;
+    color: #FFFFFF;
+}

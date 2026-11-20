@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+
 import openpyxl
 from openpyxl.utils import get_column_letter
 

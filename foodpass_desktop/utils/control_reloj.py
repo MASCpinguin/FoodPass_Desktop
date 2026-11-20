@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Union
+from datetime import UTC, datetime
 
 UMBRAL_MINUTOS_ALERTA = 5.0
 UMBRAL_SEGUNDOS_ALERTA = UMBRAL_MINUTOS_ALERTA * 60
@@ -21,7 +20,7 @@ class EstadoReloj:
 _ULTIMO_ESTADO_RELOJ: EstadoReloj | None = None
 
 
-def _a_datetime(valor: Union[datetime, str]) -> datetime:
+def _a_datetime(valor: datetime | str) -> datetime:
     if isinstance(valor, datetime):
         dt = valor
     elif isinstance(valor, str):
@@ -30,13 +29,13 @@ def _a_datetime(valor: Union[datetime, str]) -> datetime:
         raise TypeError("La hora debe ser datetime o cadena ISO 8601")
 
     if dt.tzinfo is not None:
-        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt.astimezone(UTC).replace(tzinfo=None)
     return dt
 
 
 def evaluar_diferencia_reloj(
-    hora_servidor: Union[datetime, str],
-    hora_equipo: Union[datetime, str],
+    hora_servidor: datetime | str,
+    hora_equipo: datetime | str,
     umbral_minutos: float = UMBRAL_MINUTOS_ALERTA,
 ) -> EstadoReloj:
     """

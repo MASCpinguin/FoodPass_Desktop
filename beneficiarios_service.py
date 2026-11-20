@@ -1,4 +1,3 @@
-import openpyxl
 from openpyxl import Workbook
 
 from foodpass_desktop.utils.seguridad_excel import (

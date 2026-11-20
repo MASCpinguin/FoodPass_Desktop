@@ -47,6 +47,11 @@ class ClienteApi:
     def limpiar_token(self):
         self._token = None
 
+        
+    @property
+    def tiene_sesion(self):
+        return self._token is not None
+
     def renovar(self):
         """Renueva el token y lo guarda solo. Devuelve la respuesta."""
         datos = self.post("/auth/renovar")

@@ -23,7 +23,9 @@ app.json.ensure_ascii = False  # tildes legibles en las respuestas
 # Estado en memoria
 tokens = {}  # token -> {"operador": dict, "expira": datetime}
 intentos = {}  # email -> {"fallidos": int, "bloqueado_hasta": datetime | None}
+recibidos = {}  # uuid -> registro (sincronización)
 canjes_hoy = {}  # usuario_id -> {"servicio": str, "hora": str, "modalidad": str, "motivo": str | None}
+
 
 
 def ahora():
@@ -237,3 +239,24 @@ def no_encontrado(_):
 @app.errorhandler(405)
 def metodo_no_permitido(_):
     return error(405, "METODO_NO_PERMITIDO", "Método no permitido para esta ruta.")
+
+# ---------- Sincronización · Lote de registros diferidos ----------
+# FORMATO SUPUESTO: confirmar contra el 05 Contrato de endpoints.
+@app.post(f"{PREFIJO}/sincronizacion/lote")
+@requiere_token
+def sincronizacion_lote():
+    datos = request.get_json(silent=True) or {}
+    registros = datos.get("registros")
+    if not isinstance(registros, list) or not registros or len(registros) > 50:
+        return error(400, "LOTE_INVALIDO", "El lote debe traer entre 1 y 50 registros.")
+    resultados = []
+    for r in registros:
+        uid = r.get("uuid") if isinstance(r, dict) else None
+        if not uid or r.get("tipo") not in ("canje", "venta", "anulacion"):
+            resultados.append({"uuid": uid, "estado": "error", "codigo": "REGISTRO_INVALIDO"})
+        elif uid in recibidos:
+            resultados.append({"uuid": uid, "estado": "duplicado"})
+        else:
+            recibidos[uid] = r
+            resultados.append({"uuid": uid, "estado": "ok"})
+    return jsonify({"resultados": resultados})

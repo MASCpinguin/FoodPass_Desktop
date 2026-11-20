@@ -220,4 +220,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Configuración local del editor
-.vscode/
+.vscode/cache.key
+beneficiarios_cache.bin

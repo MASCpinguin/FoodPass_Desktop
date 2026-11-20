@@ -5,10 +5,31 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from foodpass_desktop.utils.seguridad_excel import (
-    cargar_valores_excel,
-    tiene_prefijo_peligroso,
-)
+try:
+    from foodpass_desktop.utils.seguridad_excel import (
+        cargar_valores_excel,
+        tiene_prefijo_peligroso,
+    )
+except ModuleNotFoundError:
+    import openpyxl
+
+    _PREFIJOS_PELIGROSOS = ("=", "+", "-", "@", "\t", "\r")
+
+    def cargar_valores_excel(
+        ruta_archivo: str | Path,
+        *,
+        data_only: bool = True,
+    ) -> Any:
+        """Abre un libro de Excel como respaldo cuando seguridad_excel no está en la rama."""
+        return openpyxl.load_workbook(ruta_archivo, data_only=data_only)
+
+    def tiene_prefijo_peligroso(valor: Any) -> bool:
+        """Detecta prefijos potencialmente peligrosos en celdas de hoja de cálculo."""
+        if valor is None:
+            return False
+        texto = str(valor).lstrip()
+        return texto.startswith(_PREFIJOS_PELIGROSOS)
+
 
 ESTADOS_VALIDOS = {"activo", "inactivo"}
 
@@ -44,14 +65,22 @@ def _leer_filas_archivo(ruta_archivo: str | Path) -> list[tuple[int, list[Any]]]
 
     if extension == ".xlsx":
         wb = cargar_valores_excel(str(path), data_only=True)
-        ws = wb.active
-        filas: list[tuple[int, list[Any]]] = []
-        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-            if row is None or not any(cell is not None and str(cell).strip() != "" for cell in row):
-                continue
-            filas.append((idx, list(row)))
-        wb.close()
-        return filas
+        try:
+            ws = wb.active
+            if ws is None:
+                return []
+            filas: list[tuple[int, list[Any]]] = []
+            for idx, row in enumerate(
+                ws.iter_rows(min_row=2, values_only=True), start=2
+            ):
+                if row is None or not any(
+                    cell is not None and str(cell).strip() != "" for cell in row
+                ):
+                    continue
+                filas.append((idx, list(row)))
+            return filas
+        finally:
+            wb.close()
 
     if extension == ".csv":
         filas_csv: list[tuple[int, list[Any]]] = []
@@ -90,7 +119,7 @@ def generar_vista_previa_importacion(
     beneficiarios_actuales: list[dict[str, Any]],
 ) -> VistaPreviaImportacion:
     """
-    Valida un archivo de beneficiarios (.xlsx o .csv) y calcula:
+        Valida un archivo de beneficiarios (.xlsx o .csv) y calcula:
     - altas: documentos nuevos válidos
     - cambios: documentos existentes con nombre, email o estado distintos
     - bajas: beneficiarios activos actuales cuyo documento no viene en el archivo
@@ -112,7 +141,9 @@ def generar_vista_previa_importacion(
         # 1. Bloqueo de inyección de fórmulas (=, +, -, @) en cualquier celda
         if any(tiene_prefijo_peligroso(celda) for celda in valores):
             vista.errores.append(
-                ErrorFilaImportacion(fila=num_fila, motivo="Contenido no permitido (=, +, -, @)")
+                ErrorFilaImportacion(
+                    fila=num_fila, motivo="Contenido no permitido (=, +, -, @)"
+                )
             )
             continue
 
@@ -123,18 +154,24 @@ def generar_vista_previa_importacion(
 
         # 2. Documento vacío
         if not doc:
-            vista.errores.append(ErrorFilaImportacion(fila=num_fila, motivo="Documento vacío"))
+            vista.errores.append(
+                ErrorFilaImportacion(fila=num_fila, motivo="Documento vacío")
+            )
             continue
 
         # 3. Nombre vacío
         if not nombre:
-            vista.errores.append(ErrorFilaImportacion(fila=num_fila, motivo="Nombre vacío"))
+            vista.errores.append(
+                ErrorFilaImportacion(fila=num_fila, motivo="Nombre vacío")
+            )
             continue
 
         # 4. Estado inválido
         if estado not in ESTADOS_VALIDOS:
             vista.errores.append(
-                ErrorFilaImportacion(fila=num_fila, motivo="Estado inválido (debe ser activo o inactivo)")
+                ErrorFilaImportacion(
+                    fila=num_fila, motivo="Estado inválido (debe ser activo o inactivo)"
+                )
             )
             continue
 
@@ -168,21 +205,25 @@ def generar_vista_previa_importacion(
                 or reg["email"] != email_actual
                 or reg["estado"] != estado_actual
             ):
-                vista.cambios.append({
-                    **reg,
-                    "estado_anterior": estado_actual,
-                })
+                vista.cambios.append(
+                    {
+                        **reg,
+                        "estado_anterior": estado_actual,
+                    }
+                )
 
     # Clasificar bajas: beneficiarios activos que no aparecen en el archivo
     for doc, actual in actuales_por_doc.items():
         estado_actual = str(actual.get("estado", "")).strip().lower()
         if estado_actual == "activo" and doc not in documentos_archivo:
-            vista.bajas.append({
-                "numero_documento": doc,
-                "nombre_completo": str(actual.get("nombre_completo", "")).strip(),
-                "email": str(actual.get("email") or "").strip(),
-                "estado": "inactivo",
-            })
+            vista.bajas.append(
+                {
+                    "numero_documento": doc,
+                    "nombre_completo": str(actual.get("nombre_completo", "")).strip(),
+                    "email": str(actual.get("email") or "").strip(),
+                    "estado": "inactivo",
+                }
+            )
 
     return vista
 
@@ -196,13 +237,15 @@ def aplicar_vista_previa_importacion(
     confirmar_omitir_errores: bool = False,
 ) -> list[dict[str, Any]]:
     """
-    Aplica la vista previa sobre la lista de beneficiarios solo si está confirmada.
+        Aplica la vista previa sobre la lista de beneficiarios solo si está confirmada.
     - No aplica nada si confirmado es False.
     - Si hay errores y no se confirma omitirlos, lanza ValueError.
     - Aplica bajas solo si aplicar_bajas es True.
     """
     if not confirmado:
-        raise PermissionError("Debe confirmar la vista previa antes de aplicar la importación.")
+        raise PermissionError(
+            "Debe confirmar la vista previa antes de aplicar la importación."
+        )
 
     if vista.errores and not confirmar_omitir_errores:
         raise ValueError(

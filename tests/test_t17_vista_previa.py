@@ -67,8 +67,18 @@ def test_vista_previa_clasifica_altas_cambios_bajas_y_errores(tmp_path):
 
 def test_no_aplica_sin_confirmacion_y_respeta_interruptor_de_bajas(tmp_path):
     actuales = [
-        {"numero_documento": "2001", "nombre_completo": "Uno", "email": "", "estado": "activo"},
-        {"numero_documento": "2002", "nombre_completo": "Dos", "email": "", "estado": "activo"},
+        {
+            "numero_documento": "2001",
+            "nombre_completo": "Uno",
+            "email": "",
+            "estado": "activo",
+        },
+        {
+            "numero_documento": "2002",
+            "nombre_completo": "Dos",
+            "email": "",
+            "estado": "activo",
+        },
     ]
     archivo = tmp_path / "solo_uno.csv"
     _crear_csv(archivo, [["2001", "Uno", "", "activo"]])

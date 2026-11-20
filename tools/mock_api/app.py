@@ -9,7 +9,7 @@ from functools import wraps
 
 from flask import Flask, jsonify, request
 
-from .datos import OPERADORES
+from .datos import BENEFICIARIOS, OPERADORES
 
 BOGOTA = timezone(timedelta(hours=-5))
 PREFIJO = "/api/v1/escritorio"
@@ -23,6 +23,7 @@ app.json.ensure_ascii = False  # tildes legibles en las respuestas
 # Estado en memoria
 tokens = {}  # token -> {"operador": dict, "expira": datetime}
 intentos = {}  # email -> {"fallidos": int, "bloqueado_hasta": datetime | None}
+canjes_hoy = {}  # usuario_id -> {"servicio": str, "hora": str, "modalidad": str, "motivo": str | None}
 
 
 def ahora():
@@ -79,30 +80,45 @@ def login():
     bloqueado_hasta = registro["bloqueado_hasta"]
     if bloqueado_hasta and bloqueado_hasta > ahora():
         restantes = int((bloqueado_hasta - ahora()).total_seconds())
-        return error(423, "CUENTA_BLOQUEADA", "Cuenta bloqueada temporalmente.",
-                     {"segundos_restantes": restantes})
+        return error(
+            423,
+            "CUENTA_BLOQUEADA",
+            "Cuenta bloqueada temporalmente.",
+            {"segundos_restantes": restantes},
+        )
 
     operador = next(
-        (o for o in OPERADORES if o["email"] == email and o["password"] == password), None
+        (o for o in OPERADORES if o["email"] == email and o["password"] == password),
+        None,
     )
     if operador is None:
         registro["fallidos"] += 1
         if registro["fallidos"] >= MAX_INTENTOS:
             registro["fallidos"] = 0
             registro["bloqueado_hasta"] = ahora() + DURACION_BLOQUEO
-            return error(423, "CUENTA_BLOQUEADA", "Cuenta bloqueada temporalmente.",
-                         {"segundos_restantes": int(DURACION_BLOQUEO.total_seconds())})
+            return error(
+                423,
+                "CUENTA_BLOQUEADA",
+                "Cuenta bloqueada temporalmente.",
+                {"segundos_restantes": int(DURACION_BLOQUEO.total_seconds())},
+            )
         return error(401, "CREDENCIALES_INVALIDAS", "Correo o contraseña incorrectos.")
 
     if operador["rol"] != "operador_restaurante":
-        return error(403, "SIN_ROL_CAFETERIA", "Esta cuenta no tiene acceso a la cafetería.")
+        return error(
+            403, "SIN_ROL_CAFETERIA", "Esta cuenta no tiene acceso a la cafetería."
+        )
 
     intentos.pop(email, None)
     token, expira = crear_token(operador)
     return jsonify({
         "token": token,
         "expira": fecha_iso(expira),
-        "operador": {"id": operador["id"], "nombre": operador["nombre"], "email": operador["email"]},
+        "operador": {
+            "id": operador["id"],
+            "nombre": operador["nombre"],
+            "email": operador["email"],
+        },
     })
 
 
@@ -121,6 +137,95 @@ def renovar():
 def logout():
     tokens.pop(request.token, None)
     return "", 204
+
+
+# ---------- EP-04 · Registrar canje (QR y Manual) ----------
+@app.post(f"{PREFIJO}/canjes")
+def registrar_canje():
+    """Registra un canje por QR (usuario_id) o Manual (documento + motivo)."""
+    datos = request.get_json(silent=True) or {}
+    servicio = str(datos.get("servicio", "")).strip()
+    modalidad = str(datos.get("modalidad", "qr")).strip().lower()
+    motivo = datos.get("motivo")
+
+    if servicio not in {"Desayuno", "Almuerzo", "Refrigerio"}:
+        return error(422, "SERVICIO_INVALIDO", "Debe seleccionar un servicio válido.")
+
+    if modalidad == "manual":
+        documento = str(datos.get("documento", "")).strip()
+        if not documento:
+            return error(
+                422, "DOCUMENTO_REQUERIDO", "Debe ingresar el número de documento."
+            )
+        if not motivo:
+            return error(
+                422,
+                "MOTIVO_REQUERIDO",
+                "Debe seleccionar un motivo para el canje manual.",
+            )
+        beneficiario = next(
+            (b for b in BENEFICIARIOS if b["numero_documento"] == documento),
+            None,
+        )
+    else:
+        raw_id = str(datos.get("usuario_id", "")).strip()
+        if not raw_id.isdigit():
+            return error(
+                422, "CODIGO_NO_RECONOCIDO", "El código leído no es un ID válido."
+            )
+        usuario_id = int(raw_id)
+        beneficiario = next(
+            (b for b in BENEFICIARIOS if b["usuario_id"] == usuario_id),
+            None,
+        )
+
+    if beneficiario is None or not beneficiario.get("activo", False):
+        return error(
+            404,
+            "NO_BENEFICIARIO",
+            "El usuario no se encuentra activo en la base de beneficiarios.",
+        )
+
+    uid = beneficiario["usuario_id"]
+    if uid in canjes_hoy:
+        previo = canjes_hoy[uid]
+        return error(
+            409,
+            "YA_RECIBIO_HOY",
+            f"Ya recibió {previo['servicio']} hoy a las {previo['hora']}.",
+            {
+                "nombre": beneficiario["nombre_completo"],
+                "documento": beneficiario["numero_documento"],
+                "servicio": previo["servicio"],
+                "hora": previo["hora"],
+            },
+        )
+
+    hora_actual = ahora().strftime("%I:%M %p")
+    canjes_hoy[uid] = {
+        "servicio": servicio,
+        "hora": hora_actual,
+        "modalidad": modalidad,
+        "motivo": motivo,
+    }
+
+    return (
+        jsonify({
+            "estado": "entregado",
+            "canje": {
+                "usuario_id": uid,
+                "nombre": beneficiario["nombre_completo"],
+                "documento": beneficiario["numero_documento"],
+                "programa": beneficiario["programa"],
+                "foto_url": beneficiario["foto_url"],
+                "servicio": servicio,
+                "hora": hora_actual,
+                "modalidad": modalidad,
+                "motivo": motivo,
+            },
+        }),
+        201,
+    )
 
 
 # ---------- Errores generales con el formato del contrato ----------

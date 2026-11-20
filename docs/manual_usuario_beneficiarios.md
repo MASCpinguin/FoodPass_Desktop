@@ -1,14 +1,16 @@
 # Manual de Usuario — Módulo de Beneficiarios (`FoodPass_Desktop`)
 
-Esta guía explica cómo preparar la plantilla de beneficiarios, cargar información, consultar/filtrar registros y proteger los datos locales en **FoodPass_Desktop**.
+Esta guía explica cómo consultar y filtrar registros en **FoodPass_Desktop**, y detalla las funciones de plantilla de Excel, importación y caché cifrada que se encuentran `(Pendiente)`.
 
 ---
 
-## 1. Descargar y llenar la plantilla de Excel
+## 1. Descargar y llenar la plantilla de Excel `(Pendiente)`
 
-1. Genera o abre la plantilla oficial (`plantilla_beneficiarios.xlsx`).
-2. Revisa la hoja **Instrucciones** para confirmar los formatos permitidos antes de diligenciar datos.
-3. En la hoja **Beneficiarios**, completa las columnas en este orden exacto:
+> **Estado:** `(Pendiente)` — La descarga y gestión de la plantilla de Excel aún no está disponible en `develop`.
+
+1. Generar o abrir la plantilla oficial (`plantilla_beneficiarios.xlsx`) `(Pendiente)`.
+2. Revisar la hoja **Instrucciones** para confirmar los formatos permitidos antes de diligenciar datos `(Pendiente)`.
+3. En la hoja **Beneficiarios**, completar las columnas en este orden exacto `(Pendiente)`:
    - `tipo_documento`: tipo de documento (por ejemplo `CC`, `TI`, `CE`).
    - `numero_documento`: número sin puntos, comas ni espacios.
    - `nombre_completo`: nombre y apellidos del beneficiario.
@@ -16,20 +18,22 @@ Esta guía explica cómo preparar la plantilla de beneficiarios, cargar informac
    - `ficha`: número de ficha.
    - `estado`: debe ser exactamente `activo` o `inactivo`.
 
-> **Importante:** No escribas fórmulas ni valores que inicien con `=`, `+`, `-` o `@` en ninguna celda; el sistema los bloquea por seguridad.
+> **Importante:** No escribir fórmulas ni valores que inicien con `=`, `+`, `-` o `@` en ninguna celda; el sistema los bloquea por seguridad `(Pendiente)`.
 
 ---
 
-## 2. Reglas de validación al importar el archivo
+## 2. Reglas de validación al importar el archivo `(Pendiente)`
 
-Al cargar un archivo de beneficiarios, el sistema revisa fila por fila y separa los registros válidos de los errores:
+> **Estado:** `(Pendiente)` — La carga y validación de archivos de beneficiarios aún no está integrada en `develop`.
 
-- **Campos obligatorios:** `numero_documento` y `nombre_completo` no pueden estar vacíos.
-- **Estado válido:** `estado` solo acepta `activo` o `inactivo` (sin importar mayúsculas o minúsculas).
-- **Sin duplicados:** no se permiten dos filas con el mismo `numero_documento` (ni el mismo número asociado a distintos tipos de documento).
-- **Filas vacías:** las filas completamente en blanco se ignoran automáticamente.
+Al cargar un archivo de beneficiarios, el sistema revisará fila por fila y separará los registros válidos de los errores `(Pendiente)`:
 
-Si una fila tiene algún error, se reporta con su número de fila y motivo para que puedas corregirlo en el Excel y volver a intentar.
+- **Campos obligatorios `(Pendiente)`:** `numero_documento` y `nombre_completo` no pueden estar vacíos.
+- **Estado válido `(Pendiente)`:** `estado` solo acepta `activo` o `inactivo` (sin importar mayúsculas o minúsculas).
+- **Sin duplicados `(Pendiente)`:** no se permiten dos filas con el mismo `numero_documento` (ni el mismo número asociado a distintos tipos de documento).
+- **Filas vacías `(Pendiente)`:** las filas completamente en blanco se ignoran automáticamente.
+
+Si una fila tiene algún error, se reportará con su número de fila y motivo para corregir en el Excel y volver a intentar `(Pendiente)`.
 
 ---
 
@@ -44,15 +48,17 @@ En la vista de **Beneficiarios** puedes localizar registros rápidamente:
 
 ---
 
-## 4. Caché cifrada y seguridad de datos locales
+## 4. Caché cifrada y seguridad de datos locales `(Pendiente)`
 
-- Los datos de beneficiarios guardados en caché local se almacenan **cifrados** en disco (`beneficiarios_cache.bin`), no en texto plano.
-- La clave de cifrado (`cache.key` o variable de entorno `FOODPASS_CACHE_KEY`) se mantiene fuera del control de versiones para proteger la información en el equipo.
-- Si el archivo de caché no existe o no puede descifrarse, la aplicación inicia con la lista vacía de forma segura sin interrumpir el uso.
+> **Estado:** `(Pendiente)` — La caché cifrada aún no está integrada en el flujo principal de `develop`.
+
+- Los datos de beneficiarios guardados en caché local se almacenan **cifrados** en disco (`beneficiarios_cache.bin`), no en texto plano `(Pendiente)`.
+- La clave de cifrado (`cache.key` o variable de entorno `FOODPASS_CACHE_KEY`) se mantiene fuera del control de versiones para proteger la información en el equipo `(Pendiente)`.
+- Si el archivo de caché no existe o no puede descifrarse, la aplicación inicia con la lista vacía de forma segura sin interrumpir el uso `(Pendiente)`.
 
 ---
 
 ## 5. Solución rápida a problemas comunes
 
-- **Un beneficiario no aparece tras cargar el Excel:** revisa si tuvo error de documento vacío, nombre vacío, estado distinto de `activo`/`inactivo`, documento duplicado o celda iniciando con `=`, `+`, `-` o `@`.
+- **Un beneficiario no aparece tras cargar el Excel `(Pendiente)`:** la carga/validación desde Excel está pendiente de integración.
 - **La tabla aparece vacía al filtrar:** verifica que el buscador no tenga texto residual y que los filtros de **Estado** y **Programa** estén en `todos`.

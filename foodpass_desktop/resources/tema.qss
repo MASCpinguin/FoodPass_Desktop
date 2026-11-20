@@ -23,3 +23,281 @@ QLineEdit:disabled { background: #e6eae2; color: #59665b; }
 QFrame#tarjeta { background: white; border: 1px solid #d4dfcc; border-radius: 10px; }
 QTableView, QTableWidget { background: white; color: #263a2c; border: 1px solid #d4dfcc; gridline-color: #d4dfcc; selection-background-color: #315d3c; selection-color: white; }
 QHeaderView::section { background: #e2ebd8; color: #263a2c; padding: 8px; border: 0; border-bottom: 1px solid #b5c5ad; font-weight: 600; }
+
+/* ==========================================================================
+   VENTANILLA DE PRIORIZACIÓN · MANUAL DE DISEÑO v2.1
+   ========================================================================== */
+
+QWidget#vistaVentanilla {
+    background-color: #EEFDD6;
+}
+
+QLabel#tituloVentanilla {
+    color: #1B2A0E;
+    font-size: 32px;
+    font-weight: 800;
+}
+
+QLabel#subtituloVentanilla {
+    color: #5B6B45;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Selector en píldora para servicios (F5/F6/F7) */
+QFrame#contenedorPildoraServicios {
+    background-color: #E2F3C5;
+    border-radius: 26px;
+    border: none;
+}
+
+QPushButton#btnServicioPildora {
+    background-color: transparent;
+    color: #243314;
+    border: none;
+    border-radius: 20px;
+    min-height: 44px;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QPushButton#btnServicioPildora:hover {
+    background-color: #D2E8AE;
+}
+
+QPushButton#btnServicioPildora:checked {
+    background-color: #243314;
+    color: #FFFFFF;
+}
+
+/* Banner de estado de servicio seleccionado */
+QLabel#avisoServicio[activo="false"] {
+    background-color: #FFF5D6;
+    color: #8B3F00;
+    border: 1px solid #E0A100;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+QLabel#avisoServicio[activo="true"] {
+    background-color: #D6F0D0;
+    color: #1E5C1E;
+    border: 1px solid #4CB84C;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Campo de lectura QR (64 px, fondo #E2F3C5, borde naranja #FA7D2D) */
+QFrame#cajaLecturaQR {
+    background-color: #E2F3C5;
+    border: 3px solid #FA7D2D;
+    border-radius: 14px;
+    min-height: 64px;
+}
+
+QFrame#cajaLecturaQR[habilitado="false"] {
+    background-color: #F1F8E4;
+    border: 2px solid #C9CFC0;
+}
+
+QLineEdit#inputLecturaQR {
+    background-color: transparent;
+    color: #1B2A0E;
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 4px 8px;
+}
+
+QLineEdit#inputLecturaQR:disabled {
+    background-color: transparent;
+    color: #5B6B45;
+}
+
+QPushButton#btnAtajoManual {
+    background-color: #FFFFFF;
+    color: #243314;
+    border: 1px solid #C9D8B0;
+    border-radius: 10px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+QPushButton#btnAtajoManual:hover {
+    background-color: #F1F8E4;
+}
+
+/* Tarjeta de Resultado (Sección 6 del Manual v2.1) */
+QFrame#tarjetaResultado {
+    background-color: #FFFFFF;
+    border: 2px solid #E2F3C5;
+    border-radius: 20px;
+}
+
+QFrame#tarjetaResultado[estado="reposo"] {
+    background-color: #FFFFFF;
+    border: 2px solid #E2F3C5;
+}
+
+QFrame#tarjetaResultado[estado="entregado"] {
+    background-color: #FFFFFF;
+    border: 3px solid #4CB84C;
+}
+
+QFrame#tarjetaResultado[estado="ya_recibio"],
+QFrame#tarjetaResultado[estado="no_beneficiario"],
+QFrame#tarjetaResultado[estado="no_reconocido"] {
+    background-color: #FBE9E6;
+    border: 2px solid #C0392B;
+    border-left: 8px solid #C0392B;
+}
+
+QFrame#tarjetaResultado[estado="error_conexion"] {
+    background-color: #FFF5D6;
+    border: 2px solid #E0A100;
+    border-left: 8px solid #E0A100;
+}
+
+QFrame#recuadroFoto {
+    background-color: #F1F8E4;
+    border: 1px solid #E2F3C5;
+    border-radius: 16px;
+}
+
+QLabel#lblSinFoto {
+    color: #5B6B45;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+QLabel#lblEstadoTitulo[estado="reposo"] {
+    color: #5B6B45;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+QLabel#lblEstadoTitulo[estado="entregado"] {
+    color: #1E5C1E;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+QLabel#lblEstadoTitulo[estado="ya_recibio"],
+QLabel#lblEstadoTitulo[estado="no_beneficiario"],
+QLabel#lblEstadoTitulo[estado="no_reconocido"] {
+    color: #C0392B;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+QLabel#lblEstadoTitulo[estado="error_conexion"] {
+    color: #8B3F00;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* Nombre legible a 2 m: 40 px peso 800 */
+QLabel#lblNombreAprendiz {
+    color: #1B2A0E;
+    font-size: 40px;
+    font-weight: 800;
+}
+
+QLabel#lblNombreAprendiz[estado="reposo"] {
+    color: #5B6B45;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+QLabel#lblDocumentoAprendiz {
+    color: #1B2A0E;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QLabel#lblChipServicioHora {
+    background-color: #D6F0D0;
+    color: #1E5C1E;
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+QLabel#lblDetallesAprendiz {
+    color: #5B6B45;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+QLabel#lblSonidoEstado {
+    color: #5B6B45;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+/* Diálogo de Canje Manual (F2) */
+QDialog#dialogoCanjeManual {
+    background-color: #FFFFFF;
+    border-radius: 20px;
+}
+
+QLabel#tituloDialogoManual {
+    color: #1B2A0E;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+QLabel#etiquetaCampoManual {
+    color: #5B6B45;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+QLineEdit#inputDocumentoManual, QComboBox#comboMotivoManual {
+    background-color: #E2F3C5;
+    color: #1B2A0E;
+    border: 2px solid #E2F3C5;
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLineEdit#inputDocumentoManual:focus, QComboBox#comboMotivoManual:focus {
+    border: 2px solid #FA7D2D;
+}
+
+QPushButton#btnConfirmarManual {
+    background-color: #FA7D2D;
+    color: #2B1600;
+    border: none;
+    border-radius: 14px;
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QPushButton#btnConfirmarManual:hover {
+    background-color: #E86D1F;
+}
+
+QPushButton#btnCancelarManual {
+    background-color: #E2F3C5;
+    color: #243314;
+    border: none;
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 700;
+}

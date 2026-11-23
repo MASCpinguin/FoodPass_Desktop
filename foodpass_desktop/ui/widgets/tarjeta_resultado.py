@@ -158,7 +158,10 @@ class TarjetaResultado(QFrame):
             self.lbl_estado_titulo.setText("NO ESTÁ EN LA BASE")
             self.lbl_nombre.setText("No registrado")
             self.lbl_detalles.setText(
-                "No es beneficiario activo · use F2 si tiene el documento"
+                datos.get(
+                    "mensaje",
+                    "No es beneficiario activo · use F2 si tiene el documento",
+                )
             )
 
         elif tipo == "no_reconocido":
@@ -168,7 +171,9 @@ class TarjetaResultado(QFrame):
             self.lbl_estado_icono.setText("✕")
             self.lbl_estado_titulo.setText("CÓDIGO NO RECONOCIDO")
             self.lbl_nombre.setText("—")
-            self.lbl_detalles.setText("El texto leído no es un ID de usuario válido")
+            self.lbl_detalles.setText(
+                datos.get("mensaje", "El texto leído no es un código de FoodPass")
+            )
 
         elif tipo == "error_conexion":
             self._aplicar_estado("error_conexion")

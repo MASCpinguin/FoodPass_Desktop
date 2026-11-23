@@ -14,7 +14,11 @@ from PySide6.QtWidgets import (
 )
 
 ALTO_BOTON = 56  # POS de escritorio: alto mínimo de la Guía
-RUTA_LOGO = Path(__file__).resolve().parents[2] / "resources" / "img" / "logo_foodpass.png"
+CARPETA_IMG = Path(__file__).resolve().parents[2] / "resources" / "img"
+LOGOS = {
+    "principal": CARPETA_IMG / "logo_foodpass.png",  # fondos claros
+    "fondo_verde": CARPETA_IMG / "logo_fondo_verde.png",  # boleto blanco
+}
 
 
 def refrescar_estilo(widget):
@@ -131,31 +135,32 @@ class TarjetaMetrica(QFrame):
 
 
 class LogoFoodPass(QFrame):
-    """Logo oficial (boleto + palabra) sobre una placa blanca.
+    """Logo oficial de FoodPass (Manual de diseño, 3.6).
 
-    Manual de diseño, 3.6: el logo conserva sus colores; sobre fondos oscuros
-    (barra lateral, panel de marca) va dentro de una placa blanca con radio de
-    12 px para mantener el contraste del verde.
+    - "fondo_verde": boleto blanco con reloj negro, para la barra lateral y el
+      panel de marca (#283618). Sus muescas dejan ver el fondo.
+    - "principal": boleto naranja y verde, para fondos claros.
     """
 
-    def __init__(self, ancho_logo=140, margen=14, parent=None):
+    def __init__(self, ancho_logo=200, variante="fondo_verde", parent=None):
         super().__init__(parent)
         self.setObjectName("placaLogo")
         caja = QVBoxLayout(self)
-        caja.setContentsMargins(margen, margen, margen, margen)
+        caja.setContentsMargins(0, 0, 0, 0)
         self.imagen = QLabel()
         self.imagen.setObjectName("imagenLogo")
         self.imagen.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.imagen.setAccessibleName("FoodPass")
-        original = QPixmap(str(RUTA_LOGO))
+        original = QPixmap(str(LOGOS.get(variante, LOGOS["fondo_verde"])))
         if original.isNull():  # sin el recurso, se muestra el nombre
             self.imagen.setText("FoodPass")
         else:
-            escala = 2.0  # nitidez en pantallas con escala 150-200 %
+            # Nitidez en pantallas con escala alta, sin agrandar la imagen.
+            escala = max(1.0, min(2.0, original.width() / ancho_logo))
             pix = original.scaledToWidth(
                 int(ancho_logo * escala), Qt.TransformationMode.SmoothTransformation
             )
             pix.setDevicePixelRatio(escala)
             self.imagen.setPixmap(pix)
-            self.imagen.setFixedSize(ancho_logo, int(pix.height() / escala))
-        caja.addWidget(self.imagen, 0, Qt.AlignmentFlag.AlignCenter)
+            self.imagen.setFixedSize(ancho_logo, round(pix.height() / escala))
+        caja.addWidget(self.imagen, 0, Qt.AlignmentFlag.AlignLeft)

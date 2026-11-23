@@ -109,7 +109,7 @@ class LoginWindow(QWidget):
         caja.setContentsMargins(56, 48, 56, 48)
         caja.setSpacing(16)
         fila_logo = QHBoxLayout()
-        fila_logo.addWidget(LogoFoodPass(ancho_logo=190, margen=18))
+        fila_logo.addWidget(LogoFoodPass(ancho_logo=280))
         fila_logo.addStretch()
         caja.addLayout(fila_logo)
         caja.addWidget(_etiqueta("ESCRITORIO · CAFETERÍA", "subtituloMarcaLogin"))

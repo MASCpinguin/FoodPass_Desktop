@@ -30,8 +30,8 @@ QToolTip { background: #1E293B; color: #FFFFFF; border: none; padding: 6px 8px; 
 
 /* --- Barra lateral (Verde Selva Negra) ----------------------------------- */
 QFrame#barraLateral { background-color: #283618; border: none; }
-/* Logo oficial sobre placa blanca (Manual de diseño 3.6) */
-QFrame#placaLogo { background-color: #FFFFFF; border: none; border-radius: 12px; }
+/* Logo oficial, variante para fondos verdes (Manual de diseño 3.6) */
+QFrame#placaLogo { background: transparent; border: none; }
 QLabel#imagenLogo { background: transparent; }
 QLabel#subtituloMarca, QLabel#pieBarra { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
 

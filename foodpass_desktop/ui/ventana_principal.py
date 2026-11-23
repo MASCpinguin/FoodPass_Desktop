@@ -65,7 +65,7 @@ class VentanaPrincipal(QMainWindow):
         menu = QVBoxLayout(barra)
         menu.setContentsMargins(20, 28, 20, 20)
         menu.setSpacing(6)
-        menu.addWidget(LogoFoodPass(ancho_logo=124, margen=12))
+        menu.addWidget(LogoFoodPass(ancho_logo=208))
         menu.addSpacing(6)
         sub = QLabel("ESCRITORIO · CAFETERÍA")
         sub.setObjectName("subtituloMarca")

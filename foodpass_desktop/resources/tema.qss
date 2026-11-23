@@ -30,8 +30,9 @@ QToolTip { background: #1E293B; color: #FFFFFF; border: none; padding: 6px 8px; 
 
 /* --- Barra lateral (Verde Selva Negra) ----------------------------------- */
 QFrame#barraLateral { background-color: #283618; border: none; }
-QLabel#marca { color: #FFFFFF; font-size: 24px; font-weight: 700; }
-QLabel#marcaPass { color: #F97F2D; font-size: 24px; font-weight: 700; }
+/* Logo oficial sobre placa blanca (Manual de diseño 3.6) */
+QFrame#placaLogo { background-color: #FFFFFF; border: none; border-radius: 12px; }
+QLabel#imagenLogo { background: transparent; }
 QLabel#subtituloMarca, QLabel#pieBarra { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
 
 QPushButton#botonNavegacion {
@@ -218,8 +219,6 @@ QPushButton#btnCancelarManual { background-color: #FFFFFF; color: #283618; borde
 /* --- Inicio de sesión ----------------------------------------------------------- */
 QWidget#vistaLogin { background-color: #F8F9FA; }
 QFrame#panelMarcaLogin { background-color: #283618; border: none; }
-QLabel#marcaLogin { color: #FFFFFF; font-size: 26px; font-weight: 700; }
-QLabel#marcaPassLogin { color: #F97F2D; font-size: 26px; font-weight: 700; }
 QLabel#subtituloMarcaLogin, QLabel#pieMarcaLogin { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
 QLabel#heroLogin { color: #FFFFFF; font-size: 44px; font-weight: 700; }
 QLabel#descripcionMarcaLogin { color: #E2E8F0; font-size: 16px; }

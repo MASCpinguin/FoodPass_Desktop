@@ -25,7 +25,7 @@ from foodpass_desktop.ui.beneficiarios_view import BeneficiariosView
 from foodpass_desktop.ui.panel_view import PanelView
 from foodpass_desktop.ui.reporte_view import DialogoReporteEntregas, ResumenView
 from foodpass_desktop.ui.ventanilla_view import VentanillaView
-from foodpass_desktop.ui.widgets import refrescar_estilo
+from foodpass_desktop.ui.widgets import LogoFoodPass, refrescar_estilo
 
 PANTALLAS = (
     ("panel", "Panel"),
@@ -65,20 +65,12 @@ class VentanaPrincipal(QMainWindow):
         menu = QVBoxLayout(barra)
         menu.setContentsMargins(20, 28, 20, 20)
         menu.setSpacing(6)
-        fila_marca = QHBoxLayout()
-        fila_marca.setSpacing(0)
-        food = QLabel("Food")
-        food.setObjectName("marca")
-        pas = QLabel("Pass")
-        pas.setObjectName("marcaPass")
-        fila_marca.addWidget(food)
-        fila_marca.addWidget(pas)
-        fila_marca.addStretch()
-        menu.addLayout(fila_marca)
+        menu.addWidget(LogoFoodPass(ancho_logo=124, margen=12))
+        menu.addSpacing(6)
         sub = QLabel("ESCRITORIO · CAFETERÍA")
         sub.setObjectName("subtituloMarca")
         menu.addWidget(sub)
-        menu.addSpacing(24)
+        menu.addSpacing(16)
 
         self.contenido = QStackedWidget()
         self.contenido.setObjectName("areaContenido")

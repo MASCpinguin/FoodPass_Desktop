@@ -1,6 +1,9 @@
 """Componentes básicos según la Guía de Estilos de FoodPass (Manual de diseño v2.2)."""
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
@@ -11,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 ALTO_BOTON = 56  # POS de escritorio: alto mínimo de la Guía
+RUTA_LOGO = Path(__file__).resolve().parents[2] / "resources" / "img" / "logo_foodpass.png"
 
 
 def refrescar_estilo(widget):
@@ -124,3 +128,34 @@ class TarjetaMetrica(QFrame):
         self.lbl_detalle.setText(detalle)
         if self.barra is not None and porcentaje is not None:
             self.barra.setValue(max(0, min(100, int(porcentaje))))
+
+
+class LogoFoodPass(QFrame):
+    """Logo oficial (boleto + palabra) sobre una placa blanca.
+
+    Manual de diseño, 3.6: el logo conserva sus colores; sobre fondos oscuros
+    (barra lateral, panel de marca) va dentro de una placa blanca con radio de
+    12 px para mantener el contraste del verde.
+    """
+
+    def __init__(self, ancho_logo=140, margen=14, parent=None):
+        super().__init__(parent)
+        self.setObjectName("placaLogo")
+        caja = QVBoxLayout(self)
+        caja.setContentsMargins(margen, margen, margen, margen)
+        self.imagen = QLabel()
+        self.imagen.setObjectName("imagenLogo")
+        self.imagen.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.imagen.setAccessibleName("FoodPass")
+        original = QPixmap(str(RUTA_LOGO))
+        if original.isNull():  # sin el recurso, se muestra el nombre
+            self.imagen.setText("FoodPass")
+        else:
+            escala = 2.0  # nitidez en pantallas con escala 150-200 %
+            pix = original.scaledToWidth(
+                int(ancho_logo * escala), Qt.TransformationMode.SmoothTransformation
+            )
+            pix.setDevicePixelRatio(escala)
+            self.imagen.setPixmap(pix)
+            self.imagen.setFixedSize(ancho_logo, int(pix.height() / escala))
+        caja.addWidget(self.imagen, 0, Qt.AlignmentFlag.AlignCenter)

@@ -28,7 +28,12 @@ from foodpass_desktop.services.auth_service import (
     mensaje_bloqueo,
     validar_credenciales,
 )
-from foodpass_desktop.ui.widgets import BotonPrincipal, BotonSecundario, CampoTexto
+from foodpass_desktop.ui.widgets import (
+    BotonPrincipal,
+    BotonSecundario,
+    CampoTexto,
+    LogoFoodPass,
+)
 
 TEXTO_INGRESAR = "Ingresar"
 TEXTO_INGRESANDO = "Ingresando…"
@@ -103,12 +108,10 @@ class LoginWindow(QWidget):
         caja = QVBoxLayout(panel)
         caja.setContentsMargins(56, 48, 56, 48)
         caja.setSpacing(16)
-        marca = QHBoxLayout()
-        marca.setSpacing(0)
-        marca.addWidget(_etiqueta("Food", "marcaLogin"))
-        marca.addWidget(_etiqueta("Pass", "marcaPassLogin"))
-        marca.addStretch()
-        caja.addLayout(marca)
+        fila_logo = QHBoxLayout()
+        fila_logo.addWidget(LogoFoodPass(ancho_logo=190, margen=18))
+        fila_logo.addStretch()
+        caja.addLayout(fila_logo)
         caja.addWidget(_etiqueta("ESCRITORIO · CAFETERÍA", "subtituloMarcaLogin"))
         caja.addStretch()
         caja.addWidget(_etiqueta("Verifica\nsin filas.", "heroLogin", True))

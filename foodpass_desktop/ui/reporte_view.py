@@ -1,0 +1,225 @@
+"""Pantalla 5 · Resumen del día (RF-ES05 · CU-12) y diálogo del reporte de
+entregas con exportación a Excel (RF-ES24 · CU-06).
+"""
+
+from pathlib import Path
+
+from PySide6.QtCore import QDate, Qt, Signal
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDateEdit,
+    QDialog,
+    QFileDialog,
+    QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from foodpass_desktop.api.trabajador import ejecutar_en_segundo_plano
+from foodpass_desktop.services import reportes_service
+from foodpass_desktop.storage import consultas_bd
+from foodpass_desktop.ui.widgets import (
+    Aviso,
+    BotonNeutro,
+    BotonPrincipal,
+    BotonSecundario,
+    TarjetaMetrica,
+    etiqueta,
+)
+
+
+class ResumenView(QWidget):
+    actualizar_solicitado = Signal()
+    abrir_reporte = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("paginaContenido")
+        raiz = QVBoxLayout(self)
+        raiz.setContentsMargins(36, 30, 36, 28)
+        raiz.setSpacing(18)
+        encabezado = QHBoxLayout()
+        col = QVBoxLayout()
+        col.addWidget(etiqueta("Resumen del día", "tituloPantalla", False))
+        self.lbl_fecha = etiqueta(
+            "Se calcula con las entregas registradas. No se guarda.",
+            "descripcionPantalla",
+        )
+        col.addWidget(self.lbl_fecha)
+        encabezado.addLayout(col, 1)
+        self.btn_reporte = BotonSecundario("Reporte de entregas")
+        self.btn_reporte.clicked.connect(self.abrir_reporte.emit)
+        self.btn_actualizar = BotonPrincipal("Actualizar")
+        self.btn_actualizar.clicked.connect(self.actualizar_solicitado.emit)
+        encabezado.addWidget(self.btn_reporte)
+        encabezado.addWidget(self.btn_actualizar)
+        raiz.addLayout(encabezado)
+
+        self.aviso = Aviso("", "advertencia")
+        raiz.addWidget(self.aviso)
+
+        rejilla = QGridLayout()
+        rejilla.setSpacing(16)
+        self.total = TarjetaMetrica("Total de entregas", destacada=True)
+        rejilla.addWidget(self.total, 0, 0, 2, 1)
+        self.servicios = {}
+        for i, s in enumerate(("desayuno", "almuerzo", "refrigerio")):
+            t = TarjetaMetrica(s.capitalize())
+            self.servicios[s] = t
+            rejilla.addWidget(t, 0, i + 1)
+        self.por_codigo = TarjetaMetrica("Con código FoodPass")
+        self.por_documento = TarjetaMetrica("Por documento (F2)")
+        self.anulados = TarjetaMetrica("Anulados")
+        rejilla.addWidget(self.por_codigo, 1, 1)
+        rejilla.addWidget(self.por_documento, 1, 2)
+        rejilla.addWidget(self.anulados, 1, 3)
+        raiz.addLayout(rejilla)
+        raiz.addStretch()
+
+    def actualizar(self, resumen, conectado=True):
+        if not conectado or resumen is None:
+            self.aviso.fijar(
+                "No hay conexión con la base de datos. Las cifras pueden estar desactualizadas.",
+                "advertencia",
+            )
+            return
+        self.aviso.fijar("", "advertencia")
+        self.lbl_fecha.setText(
+            f"Día {resumen['fecha']} · se calcula con las entregas registradas. No se guarda."
+        )
+        self.total.fijar(resumen["total"], "entregas del día")
+        for s, t in self.servicios.items():
+            t.fijar(resumen["por_servicio"][s])
+        self.por_codigo.fijar(resumen["por_modalidad"]["qr"])
+        self.por_documento.fijar(resumen["por_modalidad"]["manual"])
+        self.anulados.fijar(resumen["anulados"], "no suman en el total")
+
+
+class DialogoReporteEntregas(QDialog):
+    """RF-ES24: periodo (máx. 93 días), servicio, detalle, totales y Excel."""
+
+    def __init__(self, parent=None, consultar=consultas_bd.reporte_entregas):
+        super().__init__(parent)
+        self._consultar = consultar
+        self._reporte = None
+        self.setWindowTitle("Reporte de entregas")
+        self.resize(980, 640)
+        raiz = QVBoxLayout(self)
+        raiz.setContentsMargins(28, 24, 28, 24)
+        raiz.setSpacing(12)
+        raiz.addWidget(etiqueta("Reporte de entregas", "tituloDialogo", False))
+        filtros = QHBoxLayout()
+        filtros.setSpacing(12)
+        hoy = QDate.currentDate()
+        self.desde = QDateEdit(hoy)
+        self.hasta = QDateEdit(hoy)
+        for campo in (self.desde, self.hasta):
+            campo.setCalendarPopup(True)
+            campo.setDisplayFormat("yyyy-MM-dd")
+        self.servicio = QComboBox()
+        self.servicio.addItems(
+            ["Todos los servicios", "Desayuno", "Almuerzo", "Refrigerio"]
+        )
+        for texto, w in (
+            ("Desde", self.desde),
+            ("Hasta", self.hasta),
+            ("Servicio", self.servicio),
+        ):
+            caja = QVBoxLayout()
+            caja.addWidget(etiqueta(texto, "etiquetaCampo", False))
+            caja.addWidget(w)
+            filtros.addLayout(caja)
+        self.btn_consultar = BotonPrincipal("Consultar")
+        self.btn_consultar.clicked.connect(self.consultar)
+        filtros.addWidget(self.btn_consultar, 0, Qt.AlignmentFlag.AlignBottom)
+        filtros.addStretch()
+        raiz.addLayout(filtros)
+        self.aviso = Aviso("", "info")
+        raiz.addWidget(self.aviso)
+        self.tabla = QTableWidget(0, 5)
+        self.tabla.setHorizontalHeaderLabels(
+            ["Fecha y hora", "Documento", "Nombre", "Servicio", "Modalidad"]
+        )
+        self.tabla.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.Stretch
+        )
+        self.tabla.verticalHeader().setVisible(False)
+        self.tabla.setAlternatingRowColors(True)
+        self.tabla.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        raiz.addWidget(self.tabla, 1)
+        pie = QHBoxLayout()
+        self.lbl_totales = etiqueta("", "textoSecundario")
+        pie.addWidget(self.lbl_totales, 1)
+        cerrar = BotonNeutro("Cerrar")
+        cerrar.clicked.connect(self.accept)
+        self.btn_exportar = BotonSecundario("Exportar a Excel")
+        self.btn_exportar.setEnabled(False)
+        self.btn_exportar.clicked.connect(self.exportar)
+        pie.addWidget(cerrar)
+        pie.addWidget(self.btn_exportar)
+        raiz.addLayout(pie)
+        self.consultar()
+
+    def consultar(self):
+        servicio = self.servicio.currentText()
+        servicio = None if servicio.startswith("Todos") else servicio
+        self.btn_consultar.setEnabled(False)
+        ejecutar_en_segundo_plano(
+            self._consultar,
+            self.desde.date().toString("yyyy-MM-dd"),
+            self.hasta.date().toString("yyyy-MM-dd"),
+            servicio,
+            al_exito=self._mostrar,
+            al_error=self._error,
+        )
+
+    def _mostrar(self, reporte):
+        self.btn_consultar.setEnabled(True)
+        self._reporte = reporte
+        filas = reporte["detalle"]
+        self.tabla.setRowCount(len(filas))
+        for i, r in enumerate(filas):
+            for j, clave in enumerate(
+                ("fecha_hora", "documento", "nombre", "servicio", "modalidad")
+            ):
+                self.tabla.setItem(i, j, QTableWidgetItem(str(r[clave])))
+        self.tabla.resizeColumnsToContents()
+        self.tabla.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeMode.Stretch
+        )
+        t = reporte["totales"]
+        self.lbl_totales.setText(
+            f"Total: {reporte['total']}  ·  Desayuno {t['desayuno']}  ·  Almuerzo {t['almuerzo']}  ·  Refrigerio {t['refrigerio']}"
+        )
+        self.aviso.fijar("" if filas else "No hay entregas en el periodo.", "info")
+        self.btn_exportar.setEnabled(bool(filas))
+
+    def _error(self, error):
+        self.btn_consultar.setEnabled(True)
+        texto = (
+            str(error)
+            if isinstance(error, ValueError)
+            else "No se pudo consultar. Revisa la conexión o avisa a soporte técnico."
+        )
+        self.aviso.fijar(texto, "error")
+        self.btn_exportar.setEnabled(False)
+
+    def exportar(self):
+        if not self._reporte:
+            return
+        carpeta = Path.home() / "Documents"
+        sugerido = str(
+            (carpeta if carpeta.exists() else Path.home())
+            / reportes_service.nombre_archivo("Entregas")
+        )
+        ruta, _ = QFileDialog.getSaveFileName(
+            self, "Guardar reporte", sugerido, "Excel (*.xlsx)"
+        )
+        if not ruta:
+            return
+        reportes_service.exportar_entregas(self._reporte, ruta)
+        self.aviso.fijar(f"Reporte guardado en {ruta}", "info")

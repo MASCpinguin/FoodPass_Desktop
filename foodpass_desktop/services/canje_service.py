@@ -62,6 +62,22 @@ class CanjeService:
             repositorio = CanjesBD()
         self._repo = repositorio
 
+    @property
+    def usa_base_de_datos(self) -> bool:
+        return self._repo is not None
+
+    def es_codigo_valido(self, texto: str) -> bool:
+        """Revisión rápida antes de lanzar el hilo (no consulta nada)."""
+        if self._repo is not None:
+            return interpretar_codigo(texto) is not None
+        return self.validar_contenido_qr(texto)[0]
+
+    def anular(self, canje_id, registrado_en):
+        """RF-ES34: anula un canje registrado en este equipo hace ≤ 2 min."""
+        from foodpass_desktop.storage.consultas_bd import anular_canje
+
+        return anular_canje(canje_id, registrado_en)
+
     @staticmethod
     def validar_contenido_qr(contenido: str) -> tuple[bool, str]:
         """Valida que el QR tenga únicamente entre 1 y 10 dígitos numéricos."""

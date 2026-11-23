@@ -1,4 +1,3 @@
-
 def test_suma():
     resultado = 2 + 3
 

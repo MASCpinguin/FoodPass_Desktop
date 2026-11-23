@@ -30,6 +30,7 @@ class CursorFalso:
         self.respuestas = list(respuestas)
         self.sql = []
         self.error_en = error_en
+        self.lastrowid = 99
 
     def execute(self, sql, params=None):
         self.sql.append(sql)

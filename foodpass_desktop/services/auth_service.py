@@ -3,10 +3,18 @@
 Esta capa no conoce Qt: las pantallas la llaman en segundo plano y muestran lo
 que devuelve. Endpoints: EP-01 /auth/login, EP-31 /auth/renovar y
 EP-02 /auth/logout (05 Contrato de endpoints).
+
+v2.2 (C2.2-01 y C2.2-04): acepta la respuesta real de la API FoodPass
+({"success", "message", "data": {"token", "user"}}), cuenta los intentos
+fallidos y bloquea 5 min en el equipo (la API no lo hace), muestra el aviso de
+soporte técnico (RF-ES39) y verifica en la base que la cuenta sea de cafetería
+(RN16).
 """
 
+import base64
 import hashlib
 import hmac
+import json
 import re
 import secrets
 import socket
@@ -24,16 +32,20 @@ ITERACIONES_PIN = 200_000
 CLAVE_TOKEN = "token"
 CLAVE_EXPIRA = "token_expira"
 CLAVE_PIN = "pin"
+CLAVE_BLOQUEO = "bloqueo_hasta"
+MAX_INTENTOS_LOGIN = 3
+MINUTOS_BLOQUEO_LOGIN = 5
+AVISO_SOPORTE = "¿Olvidaste tu contraseña? Comunícate con soporte técnico."
 
 _PATRON_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 MENSAJES = {
     "CORREO_INVALIDO": "Escribe un correo válido.",
     "PASSWORD_VACIA": "Escribe tu contraseña.",
-    "CREDENCIALES_INVALIDAS": "Correo o contraseña incorrectos.",
-    "CUENTA_BLOQUEADA": "Cuenta bloqueada. Intenta de nuevo en {tiempo}.",
-    "SIN_ROL_CAFETERIA": "Esta cuenta no tiene acceso a la cafetería.",
-    "SIN_CONEXION": "No hay conexión con el servidor.",
+    "CREDENCIALES_INVALIDAS": "Correo o contraseña incorrectos. Inténtalo de nuevo.",
+    "CUENTA_BLOQUEADA": "Ingreso bloqueado por {tiempo}. " + AVISO_SOPORTE,
+    "SIN_ROL_CAFETERIA": "Esta cuenta no tiene acceso al escritorio. Usa tu cuenta de operador.",
+    "SIN_CONEXION": "No hay conexión con el servidor. Avisa a soporte técnico.",
     "ERROR_DESCONOCIDO": "No se pudo iniciar sesión. Intenta de nuevo.",
     "PIN_FORMATO": "El PIN debe tener de 4 a 6 dígitos.",
     "PIN_NO_COINCIDE": "Los PIN no coinciden.",
@@ -102,6 +114,11 @@ def interpretar_error(error):
             return ErrorInicioSesion("CUENTA_BLOQUEADA", segundos)
         if error.codigo in ("CREDENCIALES_INVALIDAS", "SIN_ROL_CAFETERIA"):
             return ErrorInicioSesion(error.codigo)
+        # API FoodPass real: 401 sin código = usuario o contraseña incorrectos
+        if error.status == 401:
+            return ErrorInicioSesion("CREDENCIALES_INVALIDAS")
+        if error.status == 403:
+            return ErrorInicioSesion("SIN_ROL_CAFETERIA")
     return ErrorInicioSesion("ERROR_DESCONOCIDO")
 
 
@@ -128,6 +145,28 @@ def _leer_fecha(texto):
     return fecha if fecha.tzinfo else fecha.replace(tzinfo=BOGOTA)
 
 
+def _expira_jwt(token):
+    """Lee el campo exp del JWT (sin validarlo: eso lo hace la API)."""
+    try:
+        carga = token.split(".")[1]
+        carga += "=" * (-len(carga) % 4)
+        exp = json.loads(base64.urlsafe_b64decode(carga)).get("exp")
+        return datetime.fromtimestamp(int(exp), BOGOTA).isoformat() if exp else None
+    except (IndexError, ValueError, TypeError):
+        return None
+
+
+def _verificador_por_defecto(usuario_id):
+    """RN16 con la base de datos; sin base configurada no se verifica."""
+    from foodpass_desktop.storage import bd
+
+    if not bd.configurada() or usuario_id is None:
+        return True
+    from foodpass_desktop.storage.consultas_bd import rol_permitido
+
+    return rol_permitido(usuario_id)
+
+
 def _hash_pin(pin, sal):
     return hashlib.pbkdf2_hmac(
         "sha256", pin.encode(), bytes.fromhex(sal), ITERACIONES_PIN
@@ -138,8 +177,12 @@ def _hash_pin(pin, sal):
 class AuthService:
     """Sesión del operador: login, token, renovación, cierre y PIN."""
 
-    def __init__(self, cliente, almacen, reloj=_ahora, dispositivo=None):
+    def __init__(
+        self, cliente, almacen, reloj=_ahora, dispositivo=None, verificar_rol=None
+    ):
         self._cliente = cliente
+        self._verificar_rol = verificar_rol or _verificador_por_defecto
+        self._intentos_fallidos = 0
         self._almacen = almacen
         self._reloj = reloj
         self._dispositivo = dispositivo or socket.gethostname()
@@ -157,6 +200,9 @@ class AuthService:
         codigo = validar_credenciales(email, password)
         if codigo:
             raise ErrorInicioSesion(codigo)
+        restantes = self.segundos_bloqueo()
+        if restantes > 0:
+            raise ErrorInicioSesion("CUENTA_BLOQUEADA", restantes)
         try:
             datos = self._cliente.post(
                 "/auth/login",
@@ -167,14 +213,52 @@ class AuthService:
                 },
             )
         except (ApiError, SinConexionError) as e:
-            raise interpretar_error(e) from e
+            error = interpretar_error(e)
+            if error.codigo == "CREDENCIALES_INVALIDAS":
+                error = self._registrar_fallo()
+            raise error from e
 
-        if not datos.get("token"):
+        # Formato real de la API FoodPass: {"success", "message", "data": {...}}
+        if isinstance(datos.get("data"), dict):
+            datos = datos["data"]
+        token = datos.get("token")
+        if not token:
             raise ErrorInicioSesion("ERROR_DESCONOCIDO")
-        self._guardar_token(datos["token"], datos.get("expira"))
-        self.operador = datos.get("operador") or {}
+        usuario = datos.get("operador") or datos.get("user") or {}
+        operador = {
+            "id": usuario.get("id"),
+            "nombre": usuario.get("nombre") or usuario.get("name") or "",
+            "email": usuario.get("email") or email,
+        }
+        try:
+            permitido = self._verificar_rol(operador["id"])
+        except Exception as e:  # la base no responde
+            raise ErrorInicioSesion("SIN_CONEXION") from e
+        if not permitido:
+            raise ErrorInicioSesion("SIN_ROL_CAFETERIA")
+
+        self._guardar_token(token, datos.get("expira") or _expira_jwt(token))
+        self.operador = operador
         self._pin_fallidos = 0
+        self._intentos_fallidos = 0
+        self._almacen.borrar(CLAVE_BLOQUEO)
         return self.operador
+
+    # --- bloqueo local tras 3 intentos (C2.2-01 · RF-ES39) ---------------------
+    def segundos_bloqueo(self):
+        hasta = _leer_fecha(self._almacen.leer(CLAVE_BLOQUEO))
+        if hasta is None:
+            return 0
+        return max(0, int((hasta - self._reloj()).total_seconds()))
+
+    def _registrar_fallo(self):
+        self._intentos_fallidos += 1
+        if self._intentos_fallidos < MAX_INTENTOS_LOGIN:
+            return ErrorInicioSesion("CREDENCIALES_INVALIDAS")
+        self._intentos_fallidos = 0
+        hasta = self._reloj() + timedelta(minutes=MINUTOS_BLOQUEO_LOGIN)
+        self._almacen.guardar(CLAVE_BLOQUEO, hasta.isoformat())
+        return ErrorInicioSesion("CUENTA_BLOQUEADA", MINUTOS_BLOQUEO_LOGIN * 60)
 
     def cerrar_sesion(self):
         """Llama a EP-02 y borra el token aunque la API no responda."""

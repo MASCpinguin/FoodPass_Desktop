@@ -103,14 +103,19 @@ class LoginWindow(QWidget):
         caja = QVBoxLayout(panel)
         caja.setContentsMargins(56, 48, 56, 48)
         caja.setSpacing(16)
-        caja.addWidget(_etiqueta("FoodPass", "marcaLogin"))
+        marca = QHBoxLayout()
+        marca.setSpacing(0)
+        marca.addWidget(_etiqueta("Food", "marcaLogin"))
+        marca.addWidget(_etiqueta("Pass", "marcaPassLogin"))
+        marca.addStretch()
+        caja.addLayout(marca)
         caja.addWidget(_etiqueta("ESCRITORIO · CAFETERÍA", "subtituloMarcaLogin"))
         caja.addStretch()
-        caja.addWidget(_etiqueta("Cada comida,\na tiempo.", "heroLogin", True))
+        caja.addWidget(_etiqueta("Verifica\nsin filas.", "heroLogin", True))
         caja.addWidget(
             _etiqueta(
-                "Verifica beneficiarios, registra ventas y entrega pedidos "
-                "desde un solo lugar.",
+                "Entrega el apoyo de alimentación en segundos: escanea el "
+                "código FoodPass y listo.",
                 "descripcionMarcaLogin",
                 True,
             )
@@ -155,7 +160,7 @@ class LoginWindow(QWidget):
         caja.addSpacing(14)
 
         caja.addWidget(_etiqueta("CORREO", "etiquetaCampoLogin"))
-        self.campo_email = CampoTexto("operador@foodpass.co")
+        self.campo_email = CampoTexto("operador@foodpass.com")
         self.campo_email.setObjectName("campoLogin")
         self.campo_email.returnPressed.connect(self._enviar_login)
         caja.addWidget(self.campo_email)
@@ -250,6 +255,11 @@ class LoginWindow(QWidget):
             self.mensaje_acceso.hide()
         destino = self.campo_password if self.campo_email.text() else self.campo_email
         destino.setFocus()
+        # Bloqueo local vigente (por ejemplo, tras reiniciar la aplicación)
+        consultar = getattr(self._auth, "segundos_bloqueo", None)
+        restantes = consultar() if callable(consultar) else 0
+        if restantes > 0 and not self._cuenta_regresiva.isActive():
+            self._iniciar_cuenta_regresiva(restantes)
 
     def mostrar_desbloqueo(self, operador=None):
         """Vista de PIN tras la inactividad. No muestra datos de la operación."""
@@ -297,7 +307,9 @@ class LoginWindow(QWidget):
         codigo = validar_credenciales(email, password)
         if codigo:
             self._mostrar_mensaje(self.mensaje_acceso, MENSAJES[codigo])
-            campo = self.campo_email if codigo == "CORREO_INVALIDO" else self.campo_password
+            campo = (
+                self.campo_email if codigo == "CORREO_INVALIDO" else self.campo_password
+            )
             campo.setFocus()
             return
         self.mensaje_acceso.hide()
@@ -340,6 +352,9 @@ class LoginWindow(QWidget):
         self._segundos_bloqueo = int(segundos)
         self._cuenta_regresiva.start()
         self.boton_ingresar.setEnabled(False)
+        self.campo_email.setEnabled(False)
+        self.campo_password.setEnabled(False)
+        self.mensaje_acceso.setProperty("tipo", "aviso")
         self._mostrar_mensaje(self.mensaje_acceso, mensaje_bloqueo(segundos))
 
     def _avanzar_cuenta_regresiva(self):
@@ -349,6 +364,9 @@ class LoginWindow(QWidget):
             return
         self._cuenta_regresiva.stop()
         self.mensaje_acceso.hide()
+        self.mensaje_acceso.setProperty("tipo", "error")
+        self.campo_email.setEnabled(True)
+        self.campo_password.setEnabled(True)
         self.boton_ingresar.setEnabled(True)
         self.campo_password.setFocus()
 

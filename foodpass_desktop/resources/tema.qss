@@ -1,470 +1,235 @@
-QWidget { font-family: "Segoe UI", "Arial", sans-serif; font-size: 14px; color: #263a2c; }
-QWidget#contenedorPrincipal, QStackedWidget#areaContenido { background: #f1f5e7; }
-QFrame#barraLateral { background: #1e3527; border: 0; }
-QLabel#marca { color: #ffffff; font-size: 25px; font-weight: 700; }
-QLabel#subtituloMarca, QLabel#pieBarra { color: #dce9d5; font-size: 10px; font-weight: 600; }
-QLabel#tituloPantalla { color: #1e3527; font-size: 30px; font-weight: 700; }
-QLabel#descripcionPantalla { color: #4a5c4b; font-size: 14px; }
-QPushButton { background: #ffffff; color: #263a2c; border: 1px solid #9daf99; border-radius: 7px; min-height: 44px; padding: 0 14px; font-weight: 600; }
-QPushButton:hover { background: #e2ebd8; }
-QPushButton:focus { border: 2px solid #1d4d32; }
-QPushButton:checked { background: #284c34; color: white; }
-QPushButton:disabled { color: #59665b; background: #e2e6de; }
-QPushButton#botonNavegacion { text-align: left; background: transparent; color: #f5f8ef; border: 1px solid transparent; }
-QPushButton#botonNavegacion:hover { background: #345541; }
-QPushButton#botonNavegacion:checked { background: #f2c19c; color: #263a2c; }
-QPushButton#botonNavegacion:focus { border: 2px solid #ffffff; }
-QPushButton[variante="principal"] { background: #b74a12; color: white; border: 1px solid #b74a12; }
-QPushButton[variante="principal"]:hover { background: #93380c; }
-QPushButton[variante="secundario"] { background: white; color: #264d32; border: 1px solid #264d32; }
-QLineEdit, QTextEdit, QComboBox { background: white; color: #263a2c; border: 1px solid #8a9e89; border-radius: 6px; padding: 8px; min-height: 26px; selection-background-color: #315d3c; selection-color: white; }
-QLineEdit:focus, QTextEdit:focus, QComboBox:focus { border: 2px solid #315d3c; }
-QLineEdit:disabled { background: #e6eae2; color: #59665b; }
-QFrame#tarjeta { background: white; border: 1px solid #d4dfcc; border-radius: 10px; }
-QTableView, QTableWidget { background: white; color: #263a2c; border: 1px solid #d4dfcc; gridline-color: #d4dfcc; selection-background-color: #315d3c; selection-color: white; }
-QHeaderView::section { background: #e2ebd8; color: #263a2c; padding: 8px; border: 0; border-bottom: 1px solid #b5c5ad; font-weight: 600; }
-
 /* ==========================================================================
-   VENTANILLA DE PRIORIZACIÓN · MANUAL DE DISEÑO v2.1
+   FoodPass Escritorio · Tema basado en la Guía de Estilos y Sistema de Diseño
+   de FoodPass (Manual de diseño v2.2, secciones 3 a 7).
+
+   Tokens (no escribir colores fuera de esta lista):
+     color-primary      #F97F2D  Naranja Otoñal     text-on-primary #1A1A1A
+     color-success      #2F9B34  Verde Jungla       success-text    #1F7A24  success-bg   #E3F4E4
+     color-structure    #283618  Verde Selva Negra
+     color-surface      #FFFFFF  Blanco Puro
+     color-background   #F8F9FA  Gris Neutro Claro
+     color-dark         #1E293B  Slate Dark         text-secondary  #64748B
+     danger             #B92F2B                     danger-bg       #FDECEA
+     warning            #F0AD4E                     warning-bg      #FDF3E1  warning-text #7A5300
+     attention-bg       #FEEBDD                     attention-text  #9A4A14
+     neutral-bg         #E2E8F0                     neutral-text    #475569  borde #CBD5E1
+   Radios: sm 8 px · md 12 px · full 9999 px. Botones POS: alto mínimo 56 px.
    ========================================================================== */
 
-QWidget#vistaVentanilla {
-    background-color: #EEFDD6;
-}
-
-QLabel#tituloVentanilla {
-    color: #1B2A0E;
-    font-size: 32px;
-    font-weight: 800;
-}
-
-QLabel#subtituloVentanilla {
-    color: #5B6B45;
+QWidget {
+    font-family: "Poppins", "Segoe UI", "Arial", sans-serif;
     font-size: 14px;
-    font-weight: 400;
+    color: #1E293B;
 }
 
-/* Selector en píldora para servicios (F5/F6/F7) */
-QFrame#contenedorPildoraServicios {
-    background-color: #E2F3C5;
-    border-radius: 26px;
+QWidget#contenedorPrincipal, QStackedWidget#areaContenido, QWidget#paginaContenido {
+    background-color: #F8F9FA;
+}
+
+QToolTip { background: #1E293B; color: #FFFFFF; border: none; padding: 6px 8px; }
+
+/* --- Barra lateral (Verde Selva Negra) ----------------------------------- */
+QFrame#barraLateral { background-color: #283618; border: none; }
+QLabel#marca { color: #FFFFFF; font-size: 24px; font-weight: 700; }
+QLabel#marcaPass { color: #F97F2D; font-size: 24px; font-weight: 700; }
+QLabel#subtituloMarca, QLabel#pieBarra { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
+
+QPushButton#botonNavegacion {
+    background-color: transparent;
+    color: #E2E8F0;
     border: none;
+    border-radius: 8px;
+    min-height: 56px;
+    padding: 0 16px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
 }
+QPushButton#botonNavegacion:hover { background-color: #34451F; color: #FFFFFF; }
+QPushButton#botonNavegacion:checked { background-color: #F97F2D; color: #1A1A1A; font-weight: 600; }
+QPushButton#botonNavegacion:focus { border: 3px solid #F97F2D; }
 
+QFrame#indicadorConexion { background-color: #34451F; border-radius: 8px; }
+QLabel#textoConexion { color: #FFFFFF; font-size: 13px; font-weight: 500; }
+QLabel#puntoConexion[estado="conectado"] { color: #2F9B34; font-size: 16px; }
+QLabel#puntoConexion[estado="sin_conexion"] { color: #F0AD4E; font-size: 16px; }
+
+QFrame#tarjetaOperador { background-color: #34451F; border: none; border-radius: 12px; }
+QLabel#etiquetaOperador { color: #CBD5E1; font-size: 11px; font-weight: 500; }
+QLabel#nombreOperador { color: #FFFFFF; font-size: 14px; font-weight: 600; }
+QPushButton#botonCerrarSesion {
+    background-color: transparent; color: #FFFFFF; border: 1px solid #64748B;
+    border-radius: 8px; min-height: 40px; font-size: 13px; font-weight: 500;
+}
+QPushButton#botonCerrarSesion:hover { background-color: #283618; }
+
+/* --- Encabezados ---------------------------------------------------------- */
+QLabel#tituloPantalla, QLabel#tituloVentanilla { color: #283618; font-size: 24px; font-weight: 700; }
+QLabel#descripcionPantalla, QLabel#subtituloVentanilla { color: #64748B; font-size: 14px; }
+QLabel#tituloSeccion { color: #283618; font-size: 18px; font-weight: 600; }
+QLabel#textoSecundario { color: #64748B; font-size: 13px; }
+
+/* --- Botones (alto mínimo 56 px, radius-sm) ------------------------------- */
+QPushButton {
+    background-color: #FFFFFF; color: #283618; border: 1px solid #CBD5E1;
+    border-radius: 8px; min-height: 56px; padding: 0 20px; font-size: 14px; font-weight: 500;
+}
+QPushButton:hover { background-color: #F1F5F9; }
+QPushButton:focus { border: 3px solid #F97F2D; }
+QPushButton:disabled { background-color: #E2E8F0; color: #475569; border: none; }
+
+QPushButton[variante="principal"] { background-color: #F97F2D; color: #1A1A1A; border: none; font-weight: 600; }
+QPushButton[variante="principal"]:hover { background-color: #E8701F; }
+QPushButton[variante="principal"]:focus { border: 3px solid #283618; }
+QPushButton[variante="principal"]:disabled { background-color: #E2E8F0; color: #475569; }
+
+QPushButton[variante="secundario"] { background-color: #283618; color: #FFFFFF; border: none; }
+QPushButton[variante="secundario"]:hover { background-color: #1F2A12; }
+QPushButton[variante="secundario"]:focus { border: 3px solid #F97F2D; }
+
+QPushButton[variante="destructivo"] { background-color: #B92F2B; color: #FFFFFF; border: none; }
+QPushButton[variante="destructivo"]:hover { background-color: #9E2622; }
+QPushButton[variante="destructivo"]:disabled { background-color: #E2E8F0; color: #475569; }
+
+/* --- Campos ---------------------------------------------------------------- */
+QLineEdit, QComboBox, QDateEdit, QSpinBox {
+    background-color: #FFFFFF; color: #1E293B; border: 1px solid #CBD5E1;
+    border-radius: 8px; min-height: 46px; padding: 0 12px; font-size: 14px;
+    selection-background-color: #F97F2D; selection-color: #1A1A1A;
+}
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus { border: 2px solid #F97F2D; }
+QLineEdit:disabled, QComboBox:disabled { background-color: #F1F5F9; color: #64748B; }
+QComboBox QAbstractItemView { background: #FFFFFF; selection-background-color: #FEEBDD; selection-color: #1E293B; }
+QCheckBox { font-size: 14px; spacing: 10px; }
+QCheckBox::indicator { width: 22px; height: 22px; }
+
+/* --- Tarjetas y métricas (radius-md, elevación 1) ------------------------- */
+QFrame#tarjeta, QFrame#tarjetaMetrica {
+    background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px;
+}
+QFrame#tarjetaMetrica[destacada="true"] { background-color: #283618; border: none; }
+QLabel#etiquetaMetrica { color: #64748B; font-size: 13px; font-weight: 500; }
+QLabel#cifraMetrica { color: #283618; font-size: 40px; font-weight: 700; }
+QLabel#detalleMetrica { color: #64748B; font-size: 13px; }
+QFrame#tarjetaMetrica[destacada="true"] QLabel#etiquetaMetrica,
+QFrame#tarjetaMetrica[destacada="true"] QLabel#detalleMetrica { color: #E2E8F0; }
+QFrame#tarjetaMetrica[destacada="true"] QLabel#cifraMetrica { color: #FFFFFF; }
+
+QProgressBar { background-color: #E2E8F0; border: none; border-radius: 4px; max-height: 8px; min-height: 8px; text-align: center; }
+QProgressBar::chunk { background-color: #F97F2D; border-radius: 4px; }
+
+/* --- Avisos y badges --------------------------------------------------------- */
+QLabel#aviso { border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 500; }
+QLabel#aviso[tipo="error"] { background-color: #FDECEA; color: #1E293B; border-left: 4px solid #B92F2B; }
+QLabel#aviso[tipo="advertencia"] { background-color: #FDF3E1; color: #7A5300; border-left: 4px solid #F0AD4E; }
+QLabel#aviso[tipo="atencion"] { background-color: #FEEBDD; color: #9A4A14; border-left: 4px solid #F97F2D; }
+QLabel#aviso[tipo="info"] { background-color: #E3F4E4; color: #1F7A24; border-left: 4px solid #2F9B34; }
+
+QLabel#badge { border-radius: 12px; padding: 3px 12px; font-size: 13px; font-weight: 500; }
+QLabel#badge[tipo="canjeado"] { background-color: #E3F4E4; color: #1F7A24; }
+QLabel#badge[tipo="ya_recibio"] { background-color: #FEEBDD; color: #9A4A14; }
+QLabel#badge[tipo="neutro"] { background-color: #E2E8F0; color: #475569; }
+QLabel#badge[tipo="error"] { background-color: #FDECEA; color: #B92F2B; }
+
+/* --- Tablas ------------------------------------------------------------------ */
+QTableView, QTableWidget {
+    background-color: #FFFFFF; alternate-background-color: #F8F9FA; border: 1px solid #E2E8F0;
+    border-radius: 12px; gridline-color: #E2E8F0; font-size: 13px;
+    selection-background-color: #FEEBDD; selection-color: #1E293B;
+}
+QHeaderView::section {
+    background-color: #283618; color: #FFFFFF; border: none; padding: 10px 8px;
+    font-size: 13px; font-weight: 600;
+}
+QTableView::item, QTableWidget::item { padding: 6px; }
+
+QScrollBar:vertical { background: transparent; width: 10px; }
+QScrollBar::handle:vertical { background: #CBD5E1; border-radius: 5px; min-height: 30px; }
+QScrollBar::add-line, QScrollBar::sub-line { height: 0; }
+
+/* --- Ventanilla (Estación 1) ------------------------------------------------- */
+QWidget#vistaVentanilla { background-color: #F8F9FA; }
+
+QFrame#contenedorPildoraServicios { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 30px; }
 QPushButton#btnServicioPildora {
-    background-color: transparent;
-    color: #243314;
-    border: none;
-    border-radius: 20px;
-    min-height: 44px;
-    padding: 0 20px;
-    font-size: 15px;
-    font-weight: 700;
+    background-color: transparent; color: #283618; border: none; border-radius: 26px;
+    min-height: 52px; min-width: 150px; padding: 0 18px; font-size: 14px; font-weight: 500;
 }
+QPushButton#btnServicioPildora:hover { background-color: #F1F5F9; }
+QPushButton#btnServicioPildora:checked { background-color: #283618; color: #FFFFFF; font-weight: 600; }
+QPushButton#btnServicioPildora:focus { border: 3px solid #F97F2D; }
 
-QPushButton#btnServicioPildora:hover {
-    background-color: #D2E8AE;
-}
-
-QPushButton#btnServicioPildora:checked {
-    background-color: #243314;
-    color: #FFFFFF;
-}
-
-/* Banner de estado de servicio seleccionado */
 QLabel#avisoServicio[activo="false"] {
-    background-color: #FFF5D6;
-    color: #8B3F00;
-    border: 1px solid #E0A100;
-    border-radius: 12px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 700;
+    background-color: #FDF3E1; color: #7A5300; border-left: 4px solid #F0AD4E;
+    border-radius: 12px; padding: 12px 14px; font-weight: 500;
 }
-
 QLabel#avisoServicio[activo="true"] {
-    background-color: #D6F0D0;
-    color: #1E5C1E;
-    border: 1px solid #4CB84C;
-    border-radius: 12px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 700;
+    background-color: #E3F4E4; color: #1F7A24; border-left: 4px solid #2F9B34;
+    border-radius: 12px; padding: 12px 14px; font-weight: 600;
 }
 
-/* Campo de lectura QR (64 px, fondo #E2F3C5, borde naranja #FA7D2D) */
-QFrame#cajaLecturaQR {
-    background-color: #E2F3C5;
-    border: 3px solid #FA7D2D;
-    border-radius: 14px;
-    min-height: 64px;
-}
+QFrame#cajaLecturaQR { background-color: #FFFFFF; border: 3px solid #F97F2D; border-radius: 12px; min-height: 64px; }
+QFrame#cajaLecturaQR[habilitado="false"] { border: 3px solid #CBD5E1; background-color: #F1F5F9; }
+QLabel#iconoLectura { color: #283618; font-size: 24px; font-weight: 700; }
+QLineEdit#inputLecturaQR { background: transparent; border: none; font-size: 18px; font-weight: 600; min-height: 56px; color: #1E293B; }
+QLineEdit#inputLecturaQR:disabled { color: #64748B; }
+QPushButton#btnAtajoManual { background-color: #283618; color: #FFFFFF; border: none; min-height: 48px; }
+QPushButton#btnAtajoManual:disabled { background-color: #E2E8F0; color: #475569; }
 
-QFrame#cajaLecturaQR[habilitado="false"] {
-    background-color: #F1F8E4;
-    border: 2px solid #C9CFC0;
-}
-
-QLineEdit#inputLecturaQR {
-    background-color: transparent;
-    color: #1B2A0E;
-    border: none;
-    font-size: 20px;
-    font-weight: 700;
-    padding: 4px 8px;
-}
-
-QLineEdit#inputLecturaQR:disabled {
-    background-color: transparent;
-    color: #5B6B45;
-}
-
-QPushButton#btnAtajoManual {
-    background-color: #FFFFFF;
-    color: #243314;
-    border: 1px solid #C9D8B0;
-    border-radius: 10px;
-    min-height: 36px;
-    padding: 0 12px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-QPushButton#btnAtajoManual:hover {
-    background-color: #F1F8E4;
-}
-
-/* Tarjeta de Resultado (Sección 6 del Manual v2.1) */
-QFrame#tarjetaResultado {
-    background-color: #FFFFFF;
-    border: 2px solid #E2F3C5;
-    border-radius: 20px;
-}
-
-QFrame#tarjetaResultado[estado="reposo"] {
-    background-color: #FFFFFF;
-    border: 2px solid #E2F3C5;
-}
-
-QFrame#tarjetaResultado[estado="entregado"] {
-    background-color: #FFFFFF;
-    border: 3px solid #4CB84C;
-}
-
+QFrame#tarjetaResultado { background-color: #FFFFFF; border: 2px solid #E2E8F0; border-radius: 12px; }
+QFrame#tarjetaResultado[estado="reposo"] { border: 2px dashed #CBD5E1; }
+QFrame#tarjetaResultado[estado="entregado"] { border: 3px solid #2F9B34; background-color: #FFFFFF; }
 QFrame#tarjetaResultado[estado="ya_recibio"],
 QFrame#tarjetaResultado[estado="no_beneficiario"],
-QFrame#tarjetaResultado[estado="no_reconocido"] {
-    background-color: #FBE9E6;
-    border: 2px solid #C0392B;
-    border-left: 8px solid #C0392B;
-}
+QFrame#tarjetaResultado[estado="no_reconocido"] { border: 3px solid #B92F2B; background-color: #FDECEA; }
+QFrame#tarjetaResultado[estado="error_conexion"] { border: 3px solid #F0AD4E; background-color: #FDF3E1; }
+QFrame#tarjetaResultado[estado="anulado"] { border: 3px solid #475569; background-color: #F1F5F9; }
 
-QFrame#tarjetaResultado[estado="error_conexion"] {
-    background-color: #FFF5D6;
-    border: 2px solid #E0A100;
-    border-left: 8px solid #E0A100;
-}
-
-QFrame#recuadroFoto {
-    background-color: #F1F8E4;
-    border: 1px solid #E2F3C5;
-    border-radius: 16px;
-}
-
-QLabel#lblSinFoto {
-    color: #5B6B45;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-QLabel#lblEstadoTitulo[estado="reposo"] {
-    color: #5B6B45;
-    font-size: 13px;
-    font-weight: 800;
-}
-
-QLabel#lblEstadoTitulo[estado="entregado"] {
-    color: #1E5C1E;
-    font-size: 14px;
-    font-weight: 800;
-}
-
+QFrame#recuadroFoto { background-color: #E2E8F0; border: none; border-radius: 100px; }
+QLabel#lblSinFoto { color: #475569; font-size: 13px; font-weight: 500; }
+QLabel#lblEstadoIcono { font-size: 30px; font-weight: 700; color: #283618; }
+QLabel#lblEstadoTitulo { font-size: 24px; font-weight: 700; color: #283618; }
+QLabel#lblEstadoTitulo[estado="entregado"] { color: #1F7A24; }
 QLabel#lblEstadoTitulo[estado="ya_recibio"],
 QLabel#lblEstadoTitulo[estado="no_beneficiario"],
-QLabel#lblEstadoTitulo[estado="no_reconocido"] {
-    color: #C0392B;
-    font-size: 14px;
-    font-weight: 800;
-}
+QLabel#lblEstadoTitulo[estado="no_reconocido"] { color: #B92F2B; }
+QLabel#lblEstadoTitulo[estado="error_conexion"] { color: #7A5300; }
+QLabel#lblEstadoTitulo[estado="anulado"] { color: #475569; }
+QLabel#lblNombreAprendiz { color: #1E293B; font-size: 32px; font-weight: 700; }
+QLabel#lblNombreAprendiz[estado="reposo"] { color: #64748B; }
+QLabel#lblDocumentoAprendiz { color: #1E293B; font-size: 18px; font-weight: 600; }
+QLabel#lblChipServicioHora { background-color: #E3F4E4; color: #1F7A24; border-radius: 12px; padding: 4px 14px; font-size: 14px; font-weight: 500; }
+QLabel#lblDetallesAprendiz { color: #475569; font-size: 14px; }
+QLabel#lblSonidoEstado { color: #64748B; font-size: 13px; }
 
-QLabel#lblEstadoTitulo[estado="error_conexion"] {
-    color: #8B3F00;
-    font-size: 14px;
-    font-weight: 800;
-}
+QFrame#panelLecturas { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; }
+QLabel#filaLectura { color: #1E293B; font-size: 13px; }
 
-/* Nombre legible a 2 m: 40 px peso 800 */
-QLabel#lblNombreAprendiz {
-    color: #1B2A0E;
-    font-size: 40px;
-    font-weight: 800;
-}
+/* --- Diálogos (elevación 2) ------------------------------------------------- */
+QDialog { background-color: #FFFFFF; }
+QLabel#tituloDialogoManual, QLabel#tituloDialogo { color: #283618; font-size: 22px; font-weight: 700; }
+QLabel#etiquetaCampoManual, QLabel#etiquetaCampo { color: #1E293B; font-size: 14px; font-weight: 500; }
+QLabel#errorDialogo { color: #B92F2B; font-size: 13px; font-weight: 500; }
+QLineEdit#inputDocumentoManual, QComboBox#comboMotivoManual { min-height: 50px; font-size: 16px; }
+QPushButton#btnConfirmarManual { background-color: #F97F2D; color: #1A1A1A; border: none; font-weight: 600; }
+QPushButton#btnConfirmarManual:hover { background-color: #E8701F; }
+QPushButton#btnCancelarManual { background-color: #FFFFFF; color: #283618; border: 1px solid #CBD5E1; }
 
-QLabel#lblNombreAprendiz[estado="reposo"] {
-    color: #5B6B45;
-    font-size: 32px;
-    font-weight: 700;
-}
-
-QLabel#lblDocumentoAprendiz {
-    color: #1B2A0E;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-QLabel#lblChipServicioHora {
-    background-color: #D6F0D0;
-    color: #1E5C1E;
-    border-radius: 12px;
-    padding: 4px 12px;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-QLabel#lblDetallesAprendiz {
-    color: #5B6B45;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-QLabel#lblSonidoEstado {
-    color: #5B6B45;
-    font-size: 12.5px;
-    font-weight: 600;
-}
-
-/* Diálogo de Canje Manual (F2) */
-QDialog#dialogoCanjeManual {
-    background-color: #FFFFFF;
-    border-radius: 20px;
-}
-
-QLabel#tituloDialogoManual {
-    color: #1B2A0E;
-    font-size: 22px;
-    font-weight: 800;
-}
-
-QLabel#etiquetaCampoManual {
-    color: #5B6B45;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-QLineEdit#inputDocumentoManual, QComboBox#comboMotivoManual {
-    background-color: #E2F3C5;
-    color: #1B2A0E;
-    border: 2px solid #E2F3C5;
-    border-radius: 12px;
-    min-height: 44px;
-    padding: 0 12px;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-QLineEdit#inputDocumentoManual:focus, QComboBox#comboMotivoManual:focus {
-    border: 2px solid #FA7D2D;
-}
-
-QPushButton#btnConfirmarManual {
-    background-color: #FA7D2D;
-    color: #2B1600;
-    border: none;
-    border-radius: 14px;
-    min-height: 48px;
-    padding: 0 20px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-QPushButton#btnConfirmarManual:hover {
-    background-color: #E86D1F;
-}
-
-QPushButton#btnCancelarManual {
-    background-color: #E2F3C5;
-    color: #243314;
-    border: none;
-    border-radius: 12px;
-    min-height: 44px;
-    padding: 0 18px;
-    font-size: 14px;
-    font-weight: 700;
-}
-/* ==========================================================================
-   INICIO DE SESIÓN Y DESBLOQUEO CON PIN (T05) · MANUAL DE DISEÑO v2.1, FICHA 1
-   ========================================================================== */
-
-QWidget#vistaLogin {
-    background-color: #EEFDD6;
-}
-
-QFrame#panelMarcaLogin {
-    background-color: #243314;
-    border: none;
-}
-
-QLabel#marcaLogin {
-    color: #FFFFFF;
-    font-size: 26px;
-    font-weight: 800;
-}
-
-QLabel#subtituloMarcaLogin, QLabel#pieMarcaLogin {
-    color: #9FB486;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-/* Hero de acceso: 52 px peso 800 */
-QLabel#heroLogin {
-    color: #FFFFFF;
-    font-size: 52px;
-    font-weight: 800;
-}
-
-QLabel#descripcionMarcaLogin {
-    color: #C9D8B0;
-    font-size: 16px;
-    font-weight: 500;
-}
-
-/* Tarjeta de acceso: blanca, radio 20 px */
-QFrame#tarjetaAcceso {
-    background-color: #FFFFFF;
-    border: none;
-    border-radius: 20px;
-}
-
-QLabel#tituloAcceso {
-    color: #1B2A0E;
-    font-size: 26px;
-    font-weight: 800;
-}
-
-QLabel#descripcionAcceso {
-    color: #5B6B45;
-    font-size: 14px;
-}
-
-QLabel#etiquetaCampoLogin {
-    color: #5B6B45;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-/* Campos de texto: 42–48 px, fondo #E2F3C5, radio 12 px */
-QLineEdit#campoLogin {
-    background-color: #E2F3C5;
-    color: #1B2A0E;
-    border: 2px solid #E2F3C5;
-    border-radius: 12px;
-    min-height: 44px;
-    padding: 0 12px;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-QLineEdit#campoLogin:focus {
-    border: 2px solid #FA7D2D;
-}
-
-QLineEdit#campoLogin:disabled {
-    background-color: #F1F8E4;
-    color: #5B6B45;
-}
-
-/* Campo de PIN: 64 px con borde naranja de 3 px */
-QLineEdit#campoPin {
-    background-color: #E2F3C5;
-    color: #1B2A0E;
-    border: 3px solid #FA7D2D;
-    border-radius: 14px;
-    min-height: 64px;
-    font-size: 26px;
-    font-weight: 800;
-}
-
-QLabel#mensajeLogin[tipo="error"] {
-    background-color: #FBE9E6;
-    color: #1B2A0E;
-    border: none;
-    border-left: 4px solid #C0392B;
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-/* Botón primario de la pantalla: naranja, texto #2B1600, radio 14 px */
-QWidget#vistaLogin QPushButton[variante="principal"] {
-    background-color: #FA7D2D;
-    color: #2B1600;
-    border: none;
-    border-radius: 14px;
-    min-height: 50px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-QWidget#vistaLogin QPushButton[variante="principal"]:hover {
-    background-color: #E86D1F;
-}
-
-QWidget#vistaLogin QPushButton[variante="principal"]:disabled {
-    background-color: #F1F8E4;
-    color: #5B6B45;
-}
-
-QWidget#vistaLogin QPushButton[variante="secundario"] {
-    background-color: #E2F3C5;
-    color: #243314;
-    border: none;
-    border-radius: 12px;
-    min-height: 44px;
-    font-weight: 700;
-}
-
-/* Tarjeta del operador en la barra lateral */
-QFrame#tarjetaOperador {
-    background-color: #2F4219;
-    border: none;
-    border-radius: 14px;
-}
-
-QLabel#etiquetaOperador {
-    color: #9FB486;
-    font-size: 10px;
-    font-weight: 700;
-}
-
-QLabel#nombreOperador {
-    color: #FFFFFF;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-QPushButton#botonCerrarSesion {
-    background-color: transparent;
-    color: #C9D8B0;
-    border: 1px solid #3A4E24;
-    border-radius: 12px;
-    min-height: 36px;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-QPushButton#botonCerrarSesion:hover {
-    background-color: #3A4E24;
-    color: #FFFFFF;
-}
+/* --- Inicio de sesión ----------------------------------------------------------- */
+QWidget#vistaLogin { background-color: #F8F9FA; }
+QFrame#panelMarcaLogin { background-color: #283618; border: none; }
+QLabel#marcaLogin { color: #FFFFFF; font-size: 26px; font-weight: 700; }
+QLabel#marcaPassLogin { color: #F97F2D; font-size: 26px; font-weight: 700; }
+QLabel#subtituloMarcaLogin, QLabel#pieMarcaLogin { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
+QLabel#heroLogin { color: #FFFFFF; font-size: 44px; font-weight: 700; }
+QLabel#descripcionMarcaLogin { color: #E2E8F0; font-size: 16px; }
+QFrame#tarjetaAcceso { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; }
+QLabel#tituloAcceso { color: #283618; font-size: 24px; font-weight: 700; }
+QLabel#descripcionAcceso { color: #64748B; font-size: 14px; }
+QLabel#etiquetaCampoLogin { color: #1E293B; font-size: 14px; font-weight: 500; }
+QLineEdit#campoLogin { min-height: 48px; font-size: 15px; }
+QLineEdit#campoPin { border: 3px solid #F97F2D; border-radius: 12px; min-height: 64px; font-size: 26px; font-weight: 700; }
+QLabel#mensajeLogin { border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 500; }
+QLabel#mensajeLogin[tipo="error"] { background-color: #FDECEA; color: #1E293B; border-left: 4px solid #B92F2B; }
+QLabel#mensajeLogin[tipo="aviso"] { background-color: #FDF3E1; color: #7A5300; border-left: 4px solid #F0AD4E; }
+QWidget#vistaLogin QPushButton[variante="principal"] { min-height: 56px; font-size: 15px; }

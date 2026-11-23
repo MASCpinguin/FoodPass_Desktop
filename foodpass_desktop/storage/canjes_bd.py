@@ -228,6 +228,7 @@ class CanjesBD:
             cur.execute(
                 f"UPDATE canjes SET {sets} WHERE id = %s", (*valores, canje_web_id)
             )
+            canje_id = canje_web_id
         else:
             cur.execute("SELECT id FROM restaurantes ORDER BY id LIMIT 1")
             restaurante = cur.fetchone()
@@ -246,11 +247,14 @@ class CanjesBD:
                 marcas += ", %s"
                 valores.append(servicio_bd)
             cur.execute(f"INSERT INTO canjes ({columnas}) VALUES ({marcas})", valores)
+            canje_id = cur.lastrowid
 
         if qr_token_id:
             cur.execute("UPDATE qr_tokens SET usado = 1 WHERE id = %s", (qr_token_id,))
 
         return "entregado", {
+            "canje_id": canje_id,
+            "registrado_en": ahora_bogota(),
             "nombre": usuario["nombre"],
             "documento": usuario["documento"] or "",
             "foto_url": None,

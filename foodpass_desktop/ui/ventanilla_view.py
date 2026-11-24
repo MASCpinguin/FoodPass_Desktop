@@ -10,6 +10,7 @@ from datetime import datetime
 from PySide6.QtCore import QRegularExpression, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QRegularExpressionValidator, QShortcut
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QFrame,
@@ -357,8 +358,19 @@ class VentanillaView(QWidget):
             al_error=self._al_fallar_canje,
         )
 
+    def _pedir_servicio(self):
+        """F2 o una lectura sin servicio elegido: se avisa en lugar de no hacer nada."""
+        QApplication.beep()
+        self.lbl_aviso_servicio.setText(
+            "Primero elige el servicio: F5 desayuno · F6 almuerzo · F7 refrigerio "
+            "(o haz clic en uno). Si tu teclado es de portátil, usa Fn + la tecla."
+        )
+
     def abrir_canje_manual(self):
-        if not self.servicio_actual or self._procesando or self._dialogo_abierto:
+        if not self.servicio_actual:
+            self._pedir_servicio()
+            return
+        if self._procesando or self._dialogo_abierto:
             return
         self._dialogo_abierto = True
         dialogo = DialogoCanjeManual(self.servicio_actual, self)

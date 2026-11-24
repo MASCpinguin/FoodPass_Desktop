@@ -101,7 +101,12 @@ QLineEdit, QComboBox, QDateEdit, QSpinBox {
     border-radius: 8px; min-height: 46px; padding: 0 12px; font-size: 14px;
     selection-background-color: #F97F2D; selection-color: #1A1A1A;
 }
-QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus { border: 2px solid #F97F2D; }
+QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus { border: 2px solid #F97F2D; padding: 0 11px; }
+/* Lista desplegable: la flecha tiene su propio espacio y el texto nunca se corta */
+QComboBox { padding-right: 40px; }
+QComboBox:focus { padding-right: 39px; }
+QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: center right; width: 36px; border: none; background: transparent; }
+QComboBox::down-arrow { image: url("{RECURSOS}/icons/flecha_abajo.svg"); width: 16px; height: 16px; }
 QLineEdit:disabled, QComboBox:disabled { background-color: #F1F5F9; color: #64748B; }
 QComboBox QAbstractItemView { background: #FFFFFF; selection-background-color: #FEEBDD; selection-color: #1E293B; }
 QCheckBox { font-size: 14px; spacing: 10px; }
@@ -242,3 +247,11 @@ QLabel#itemMarcaLogin { color: #E2E8F0; font-size: 15px; font-weight: 500; }
 QFrame#separadorAcceso { background-color: #E2E8F0; border: none; }
 QLabel#ayudaAcceso { color: #64748B; font-size: 13px; }
 QPushButton#botonCerrarSesion, QPushButton#btnServicioPildora { outline: none; }
+/* Últimas lecturas desplazables */
+QScrollArea#scrollLecturas, QWidget#contenedorLecturas, QWidget#filaLecturaCaja { background: transparent; border: none; }
+QLabel#detalleLectura { color: #64748B; font-size: 12px; }
+QScrollArea#scrollLecturas QScrollBar:vertical { background: transparent; width: 8px; margin: 0; }
+QScrollArea#scrollLecturas QScrollBar::handle:vertical { background: #CBD5E1; border-radius: 4px; min-height: 32px; }
+QScrollArea#scrollLecturas QScrollBar::handle:vertical:hover { background: #94A3B8; }
+QScrollArea#scrollLecturas QScrollBar::add-line:vertical, QScrollArea#scrollLecturas QScrollBar::sub-line:vertical { height: 0; }
+QScrollArea#scrollLecturas QScrollBar::add-page:vertical, QScrollArea#scrollLecturas QScrollBar::sub-page:vertical { background: transparent; }

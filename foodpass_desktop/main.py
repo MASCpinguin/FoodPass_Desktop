@@ -33,7 +33,10 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(str(ICONO)))
     cargar_fuentes()
-    app.setStyleSheet((RECURSOS / "tema.qss").read_text(encoding="utf-8"))
+    tema = (RECURSOS / "tema.qss").read_text(encoding="utf-8")
+    # Las imágenes del QSS se resuelven con la ruta real de los recursos
+    # (funciona igual en desarrollo y dentro del .exe).
+    app.setStyleSheet(tema.replace("{RECURSOS}", RECURSOS.as_posix()))
 
     auth = AuthService(cliente, crear_almacen())
     sesion = ControladorSesion(app, auth, cliente, minutos_bloqueo())

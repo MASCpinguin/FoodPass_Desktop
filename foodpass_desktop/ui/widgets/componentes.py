@@ -108,6 +108,12 @@ class Badge(QLabel):
         self.setObjectName("badge")
         self.setProperty("tipo", tipo)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # El QSS (Poppins 13 px Medium + 12 px a cada lado) se aplica después de
+        # crear el widget: se reserva el ancho para que el texto no se corte.
+        fuente = QFont("Poppins")
+        fuente.setPixelSize(13)
+        fuente.setWeight(QFont.Weight.Medium)
+        self.setMinimumWidth(QFontMetrics(fuente).horizontalAdvance(texto) + 34)
 
 
 class TarjetaMetrica(QFrame):

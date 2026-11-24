@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -47,7 +49,7 @@ MOTIVOS_ANULACION = (
     "Servicio equivocado",
 )
 SEGUNDOS_ANULACION = 120
-MAX_LECTURAS = 6
+MAX_LECTURAS = 100  # se revisan con la rueda del mouse
 _ESCALA_HORA = "%I:%M %p"
 
 
@@ -97,6 +99,8 @@ class DialogoCanjeManual(QDialog):
         caja.addWidget(self.input_documento)
         caja.addWidget(etiqueta("Motivo", "etiquetaCampoManual"))
         self.combo_motivo = QComboBox()
+        self.combo_motivo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.combo_motivo.setMinimumWidth(170)
         self.combo_motivo.setObjectName("comboMotivoManual")
         self.combo_motivo.addItems(MOTIVOS_CANJE_MANUAL)
         caja.addWidget(self.combo_motivo)
@@ -149,6 +153,8 @@ class DialogoAnular(QDialog):
         )
         caja.addWidget(etiqueta("Motivo", "etiquetaCampo"))
         self.combo = QComboBox()
+        self.combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.combo.setMinimumWidth(170)
         self.combo.addItems(MOTIVOS_ANULACION)
         caja.addWidget(self.combo)
         fila = QHBoxLayout()
@@ -176,6 +182,7 @@ class VentanillaView(QWidget):
         self._dialogo_abierto = False
         self._ultimo_canje = None  # {"canje_id", "registrado_en", "nombre"}
         self._lecturas = []
+        self._entrada_actual = ""
         self._contador = {"Desayuno": 0, "Almuerzo": 0, "Refrigerio": 0}
         self.canje_service = servicio_canje or CanjeService()
 
@@ -285,12 +292,29 @@ class VentanillaView(QWidget):
         caja_p.setContentsMargins(18, 16, 18, 16)
         caja_p.setSpacing(8)
         caja_p.addWidget(etiqueta("Últimas lecturas", "tituloSeccion", False))
+        # Lista desplazable: guarda las últimas lecturas del turno para revisarlas
+        # con la rueda del mouse sin quitarle el foco al campo de lectura.
+        self.scroll_lecturas = QScrollArea()
+        self.scroll_lecturas.setObjectName("scrollLecturas")
+        self.scroll_lecturas.setWidgetResizable(True)
+        self.scroll_lecturas.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_lecturas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.scroll_lecturas.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        contenedor = QWidget()
+        contenedor.setObjectName("contenedorLecturas")
+        envoltura = QVBoxLayout(contenedor)
+        envoltura.setContentsMargins(0, 0, 14, 0)
+        envoltura.setSpacing(0)
         self.caja_lecturas = QVBoxLayout()
-        self.caja_lecturas.setSpacing(6)
-        caja_p.addLayout(self.caja_lecturas)
+        self.caja_lecturas.setSpacing(8)
+        envoltura.addLayout(self.caja_lecturas)
         self.lbl_sin_lecturas = etiqueta("Aún no hay lecturas.", "textoSecundario")
-        caja_p.addWidget(self.lbl_sin_lecturas)
-        caja_p.addStretch()
+        envoltura.addWidget(self.lbl_sin_lecturas)
+        envoltura.addStretch()
+        self.scroll_lecturas.setWidget(contenedor)
+        caja_p.addWidget(self.scroll_lecturas, 1)
         derecha.addWidget(panel, 1)
         cuerpo.addLayout(derecha, 2)
         raiz.addLayout(cuerpo, 1)
@@ -355,12 +379,15 @@ class VentanillaView(QWidget):
         self.input_codigo.clear()
         if not texto:
             return
+        self._entrada_actual = texto
         self.timer_limpieza.stop()
         if not self.canje_service.es_codigo_valido(texto):
             self.tarjeta.mostrar_resultado(
                 "no_reconocido", {"mensaje": "No es un código de FoodPass."}
             )
-            self._agregar_lectura("Código no reconocido", "error", "No válido")
+            self._agregar_lectura(
+                "Código no reconocido", "error", "No válido", self._entrada_actual
+            )
             self.timer_limpieza.start(4000)
             return
         self._procesando = True
@@ -393,6 +420,7 @@ class VentanillaView(QWidget):
         self.input_codigo.setFocus()
         if aceptado == QDialog.DialogCode.Accepted:
             documento, motivo = dialogo.obtener_datos()
+            self._entrada_actual = f"Documento {documento} · F2"
             self.timer_limpieza.stop()
             self._procesando = True
             ejecutar_en_segundo_plano(
@@ -414,7 +442,12 @@ class VentanillaView(QWidget):
                 self._contador.get(self.servicio_actual, 0) + 1
             )
             self._actualizar_metrica()
-            self._agregar_lectura(nombre, "canjeado", datos.get("servicio", "Canjeado"))
+            self._agregar_lectura(
+                nombre,
+                "canjeado",
+                datos.get("servicio", "Canjeado"),
+                self._entrada_actual,
+            )
             if datos.get("canje_id"):
                 self._ultimo_canje = {
                     "canje_id": datos["canje_id"],
@@ -426,7 +459,7 @@ class VentanillaView(QWidget):
                 self.timer_anular.start(SEGUNDOS_ANULACION * 1000)
             self.canje_registrado.emit()
         elif resultado.tipo == "ya_recibio":
-            self._agregar_lectura(nombre, "ya_recibio", "Ya recibió")
+            self._agregar_lectura(nombre, "ya_recibio", "Ya recibió", self._entrada_actual)
         elif resultado.tipo == "error_conexion":
             self._agregar_lectura("Sin conexión", "error", "Sin conexión")
         else:
@@ -434,6 +467,7 @@ class VentanillaView(QWidget):
                 nombre if nombre != "—" else _motivo_corto(resultado.tipo, datos),
                 "error",
                 "Rechazado",
+                self._entrada_actual,
             )
         self.timer_limpieza.start(4000)
         self.input_codigo.setFocus()
@@ -493,27 +527,44 @@ class VentanillaView(QWidget):
         self.timer_anular.stop()
 
     # --- últimas lecturas -----------------------------------------------------
-    def _agregar_lectura(self, nombre, tipo, texto_badge):
+    def _agregar_lectura(self, nombre, tipo, texto_badge, detalle=""):
         hora = datetime.now().strftime(_ESCALA_HORA)
-        self._lecturas.insert(0, (hora, nombre, tipo, texto_badge))
+        self._lecturas.insert(0, (hora, nombre, tipo, texto_badge, detalle))
         del self._lecturas[MAX_LECTURAS:]
         while self.caja_lecturas.count():
             item = self.caja_lecturas.takeAt(0)
-            fila = item.layout()
-            if fila is not None:
-                while fila.count():
-                    w = fila.takeAt(0).widget()
-                    if w:
-                        w.deleteLater()
-        for hora, nombre, tipo, badge in self._lecturas:
-            fila = QHBoxLayout()
+            viejo = item.widget()
+            if viejo:
+                viejo.hide()  # que no quede pintado mientras se elimina
+                viejo.setParent(None)
+                viejo.deleteLater()
+        for hora, nombre, tipo, badge, detalle in self._lecturas:
+            fila_w = QWidget()
+            fila_w.setObjectName("filaLecturaCaja")
+            fila = QHBoxLayout(fila_w)
+            fila.setContentsMargins(0, 0, 0, 0)
             fila.setSpacing(8)
+            textos = QVBoxLayout()
+            textos.setSpacing(0)
             lbl = QLabel(f"{hora}  ·  {nombre}")
             lbl.setObjectName("filaLectura")
-            fila.addWidget(lbl, 1)
-            fila.addWidget(Badge(badge, tipo))
-            self.caja_lecturas.addLayout(fila)
+            # Ancho ignorado: un nombre largo no empuja el badge fuera del panel.
+            lbl.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            lbl.setToolTip(nombre)
+            textos.addWidget(lbl)
+            if detalle:
+                sub = QLabel(detalle)
+                sub.setObjectName("detalleLectura")
+                sub.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+                sub.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                textos.addWidget(sub)
+            fila.addLayout(textos, 1)
+            insignia = Badge(badge, tipo)
+            insignia.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            fila.addWidget(insignia, 0, Qt.AlignmentFlag.AlignVCenter)
+            self.caja_lecturas.addWidget(fila_w)
         self.lbl_sin_lecturas.setVisible(not self._lecturas)
+        self.scroll_lecturas.verticalScrollBar().setValue(0)
 
     # --- foco ---------------------------------------------------------------------
     def limpiar_tarjeta_auto(self):

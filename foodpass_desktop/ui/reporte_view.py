@@ -121,6 +121,8 @@ class DialogoReporteEntregas(QDialog):
             campo.setCalendarPopup(True)
             campo.setDisplayFormat("yyyy-MM-dd")
         self.servicio = QComboBox()
+        self.servicio.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.servicio.setMinimumWidth(170)
         self.servicio.addItems(
             ["Todos los servicios", "Desayuno", "Almuerzo", "Refrigerio"]
         )

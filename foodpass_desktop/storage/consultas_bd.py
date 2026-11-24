@@ -121,6 +121,7 @@ def reporte_entregas(desde, hasta, servicio=None, conectar=bd.conexion):
     return {
         "desde": d1.isoformat(),
         "hasta": d2.isoformat(),
+        "servicio": servicio.capitalize() if servicio else None,
         "detalle": detalle,
         "totales": totales,
         "total": sum(totales.values()),

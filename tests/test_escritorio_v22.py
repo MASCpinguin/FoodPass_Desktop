@@ -136,7 +136,10 @@ def test_exportar_entregas(tmp_path):
 
 def test_alertas_de_raciones(monkeypatch):
     pytest.importorskip("PySide6")
-    from foodpass_desktop.ui.panel_view import calcular_alertas
+    try:
+        from foodpass_desktop.ui.panel_view import calcular_alertas
+    except ImportError as e:  # Qt sin librerías gráficas (p. ej. libEGL)
+        pytest.skip(f"Qt no disponible en este equipo: {e}")
 
     monkeypatch.setenv("RACIONES_ALMUERZO", "10")
     resumen = {"por_servicio": {"desayuno": 0, "almuerzo": 8, "refrigerio": 0}}

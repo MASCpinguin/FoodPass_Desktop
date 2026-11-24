@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QFont, QFontMetrics, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
@@ -45,6 +45,13 @@ class _Boton(QPushButton):
             self.setProperty("variante", self.variante)
         self.setMinimumHeight(ALTO_BOTON)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        # Ancho mínimo según el texto en Poppins SemiBold 14 px, para que no se
+        # corte en Windows (la fuente renderiza más ancha que en otros sistemas).
+        fuente = QFont("Poppins")
+        fuente.setPixelSize(14)
+        fuente.setWeight(QFont.Weight.DemiBold)
+        ancho = QFontMetrics(fuente).horizontalAdvance(texto)
+        self.setMinimumWidth(max(120, ancho + 64))
 
 
 class BotonPrincipal(_Boton):
@@ -111,8 +118,8 @@ class TarjetaMetrica(QFrame):
         self.setObjectName("tarjetaMetrica")
         self.setProperty("destacada", "true" if destacada else "false")
         caja = QVBoxLayout(self)
-        caja.setContentsMargins(22, 20, 22, 20)
-        caja.setSpacing(6)
+        caja.setContentsMargins(22, 16, 22, 16)
+        caja.setSpacing(4)
         self.lbl_etiqueta = etiqueta(etiqueta_texto, "etiquetaMetrica")
         self.lbl_cifra = etiqueta("0", "cifraMetrica", False)
         self.lbl_detalle = etiqueta("", "detalleMetrica")
@@ -125,11 +132,13 @@ class TarjetaMetrica(QFrame):
             self.barra.setRange(0, 100)
             caja.addWidget(self.barra)
         caja.addWidget(self.lbl_detalle)
+        self.lbl_detalle.setVisible(False)
         caja.addStretch()
 
     def fijar(self, cifra, detalle="", porcentaje=None):
         self.lbl_cifra.setText(str(cifra))
         self.lbl_detalle.setText(detalle)
+        self.lbl_detalle.setVisible(bool(detalle))
         if self.barra is not None and porcentaje is not None:
             self.barra.setValue(max(0, min(100, int(porcentaje))))
 

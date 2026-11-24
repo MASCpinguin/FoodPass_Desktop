@@ -79,32 +79,73 @@ def exportar_entregas(reporte: dict, ruta: str | Path, ahora=None) -> Path:
     return ruta
 
 
-def crear_plantilla_beneficiarios(ruta: str | Path) -> Path:
-    """RF-ES27: columnas en formato texto, sin filas de ejemplo (se importarían)."""
+def crear_plantilla_beneficiarios(ruta: str | Path, beneficiarios=None) -> Path:
+    """RF-ES27: plantilla con la lista actual de beneficiarios.
+
+    Trae los beneficiarios que ya están en la base para que el operador agregue
+    filas, corrija datos o cambie el estado y vuelva a importar: lo que no cambia
+    no genera movimientos en la vista previa. Sin lista, queda solo el encabezado.
+    """
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    filas = list(beneficiarios or [])
     wb = Workbook()
     ws = wb.active
     ws.title = "Beneficiarios"
-    aplicar_formato_texto(ws, len(COLUMNAS_PLANTILLA), 500)
+    aplicar_formato_texto(ws, len(COLUMNAS_PLANTILLA), max(500, len(filas) + 200))
     _encabezado_tabla(ws, 1, COLUMNAS_PLANTILLA)
+    for i, b in enumerate(filas, start=2):
+        valores = (
+            b.get("numero_documento", ""),
+            b.get("nombre_completo", ""),
+            b.get("email", ""),
+            b.get("estado", "activo"),
+        )
+        for col, valor in enumerate(valores, start=1):
+            ws.cell(row=i, column=col, value=str(valor or ""))
     for letra, ancho in zip("ABCD", (20, 36, 34, 12)):
         ws.column_dimensions[letra].width = ancho
     ws.freeze_panes = "A2"
+    estado = DataValidation(
+        type="list",
+        formula1='"activo,inactivo"',
+        allow_blank=True,
+        errorTitle="Estado no válido",
+        error="Escribe activo o inactivo.",
+    )
+    ws.add_data_validation(estado)
+    estado.add(f"D2:D{max(500, len(filas) + 200)}")
     ayuda = wb.create_sheet("Instrucciones")
     for fila in (
-        ["Cómo llenar la hoja «Beneficiarios»"],
+        ["Cómo usar la hoja «Beneficiarios»"],
+        [
+            "Qué trae",
+            "La lista actual de beneficiarios. Agrega filas al final, corrige datos "
+            "o cambia el estado, guarda y usa «Importar archivo».",
+        ],
         [
             "numero_documento",
             "Solo números, sin puntos ni espacios. Obligatorio y sin repetir.",
         ],
         ["nombre_completo", "Nombre y apellidos."],
         ["email", "Correo del aprendiz. Obligatorio y sin repetir."],
-        ["estado", "activo o inactivo."],
+        ["estado", "activo o inactivo (lista desplegable)."],
+        [
+            "Bajas",
+            "Si borras una fila, esa persona solo queda inactiva si marcas "
+            "«Aplicar bajas» en la vista previa.",
+        ],
         ["Importante", "No escribas celdas que empiecen por =, +, - o @: se rechazan."],
+        [],
+        ["Ejemplo de fila"],
+        ["1001001100", "Ana Gómez", "aprendiz1@soy.sena.edu.co", "activo"],
     ):
         ayuda.append(fila)
     ayuda["A1"].font = Font(bold=True, color=VERDE_SELVA)
+    ayuda["A10"].font = Font(bold=True, color=VERDE_SELVA)
     ayuda.column_dimensions["A"].width = 22
     ayuda.column_dimensions["B"].width = 70
+    ayuda.column_dimensions["C"].width = 30
     ruta = Path(ruta)
     wb.save(ruta)
     return ruta

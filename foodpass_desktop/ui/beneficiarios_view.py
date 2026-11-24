@@ -306,9 +306,12 @@ class BeneficiariosView(QWidget):
             self, "Guardar plantilla", sugerido, "Excel (*.xlsx)"
         )
         if ruta:
-            reportes_service.crear_plantilla_beneficiarios(ruta)
+            reportes_service.crear_plantilla_beneficiarios(ruta, self._todos)
+            n = len(self._todos)
             self.aviso.fijar(
-                f"Plantilla guardada en {ruta}. Llena una fila por aprendiz.", "info"
+                f"Plantilla guardada en {ruta} con los {n} beneficiarios actuales. "
+                "Agrega o corrige filas y luego usa «Importar archivo».",
+                "info",
             )
 
     def importar(self):

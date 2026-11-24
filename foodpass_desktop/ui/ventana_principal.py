@@ -66,11 +66,7 @@ class VentanaPrincipal(QMainWindow):
         menu.setContentsMargins(20, 28, 20, 20)
         menu.setSpacing(6)
         menu.addWidget(LogoFoodPass(ancho_logo=208))
-        menu.addSpacing(6)
-        sub = QLabel("ESCRITORIO · CAFETERÍA")
-        sub.setObjectName("subtituloMarca")
-        menu.addWidget(sub)
-        menu.addSpacing(16)
+        menu.addSpacing(22)
 
         self.contenido = QStackedWidget()
         self.contenido.setObjectName("areaContenido")

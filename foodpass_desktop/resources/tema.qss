@@ -76,21 +76,22 @@ QPushButton {
     border-radius: 8px; min-height: 56px; padding: 0 20px; font-size: 14px; font-weight: 500;
 }
 QPushButton:hover { background-color: #F1F5F9; }
-QPushButton:focus { border: 3px solid #F97F2D; }
+QPushButton:focus { border: 3px solid #F97F2D; padding: 0 18px; }
 QPushButton:disabled { background-color: #E2E8F0; color: #475569; border: none; }
 
-QPushButton[variante="principal"] { background-color: #F97F2D; color: #1A1A1A; border: none; font-weight: 600; }
-QPushButton[variante="principal"]:hover { background-color: #E8701F; }
+QPushButton[variante="principal"] { background-color: #F97F2D; color: #1A1A1A; border: 3px solid #F97F2D; padding: 0 18px; font-weight: 600; }
+QPushButton[variante="principal"]:hover { background-color: #E8701F; border-color: #E8701F; }
 QPushButton[variante="principal"]:focus { border: 3px solid #283618; }
-QPushButton[variante="principal"]:disabled { background-color: #E2E8F0; color: #475569; }
+QPushButton[variante="principal"]:disabled { background-color: #E2E8F0; color: #475569; border-color: #E2E8F0; }
 
-QPushButton[variante="secundario"] { background-color: #283618; color: #FFFFFF; border: none; }
-QPushButton[variante="secundario"]:hover { background-color: #1F2A12; }
+QPushButton[variante="secundario"] { background-color: #283618; color: #FFFFFF; border: 3px solid #283618; padding: 0 18px; }
+QPushButton[variante="secundario"]:hover { background-color: #1F2A12; border-color: #1F2A12; }
 QPushButton[variante="secundario"]:focus { border: 3px solid #F97F2D; }
 
-QPushButton[variante="destructivo"] { background-color: #B92F2B; color: #FFFFFF; border: none; }
-QPushButton[variante="destructivo"]:hover { background-color: #9E2622; }
-QPushButton[variante="destructivo"]:disabled { background-color: #E2E8F0; color: #475569; }
+QPushButton[variante="destructivo"] { background-color: #B92F2B; color: #FFFFFF; border: 3px solid #B92F2B; padding: 0 18px; }
+QPushButton[variante="destructivo"]:focus { border: 3px solid #283618; }
+QPushButton[variante="destructivo"]:hover { background-color: #9E2622; border-color: #9E2622; }
+QPushButton[variante="destructivo"]:disabled { background-color: #E2E8F0; color: #475569; border-color: #E2E8F0; }
 
 /* --- Campos ---------------------------------------------------------------- */
 QLineEdit, QComboBox, QDateEdit, QSpinBox {
@@ -232,3 +233,9 @@ QLabel#mensajeLogin { border-radius: 12px; padding: 12px 14px; font-size: 13px; 
 QLabel#mensajeLogin[tipo="error"] { background-color: #FDECEA; color: #1E293B; border-left: 4px solid #B92F2B; }
 QLabel#mensajeLogin[tipo="aviso"] { background-color: #FDF3E1; color: #7A5300; border-left: 4px solid #F0AD4E; }
 QWidget#vistaLogin QPushButton[variante="principal"] { min-height: 56px; font-size: 15px; }
+
+/* Beneficios del panel de marca del inicio de sesión */
+QLabel#puntoMarcaLogin { background-color: #F97F2D; border-radius: 5px; }
+QLabel#itemMarcaLogin { color: #E2E8F0; font-size: 15px; font-weight: 500; }
+QFrame#separadorAcceso { background-color: #E2E8F0; border: none; }
+QLabel#ayudaAcceso { color: #64748B; font-size: 13px; }

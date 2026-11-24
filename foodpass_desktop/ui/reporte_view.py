@@ -4,15 +4,18 @@ entregas con exportación a Excel (RF-ES24 · CU-06).
 
 from pathlib import Path
 
-from PySide6.QtCore import QDate, Qt, Signal
+from PySide6.QtCore import QDate, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QDialog,
     QFileDialog,
+    QFrame,
     QGridLayout,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -100,29 +103,46 @@ class ResumenView(QWidget):
 
 
 class DialogoReporteEntregas(QDialog):
-    """RF-ES24: periodo (máx. 93 días), servicio, detalle, totales y Excel."""
+    """RF-ES24: periodo (máx. 93 días), servicio, detalle, totales y Excel.
+
+    Los filtros se aplican solos (sin botón «Consultar») y el Excel sale con lo
+    que está en pantalla. Una sola acción principal: «Exportar a Excel».
+    """
 
     def __init__(self, parent=None, consultar=consultas_bd.reporte_entregas):
         super().__init__(parent)
         self._consultar = consultar
         self._reporte = None
         self.setWindowTitle("Reporte de entregas")
-        self.resize(980, 640)
+        self.resize(980, 660)
         raiz = QVBoxLayout(self)
         raiz.setContentsMargins(28, 24, 28, 24)
-        raiz.setSpacing(12)
+        raiz.setSpacing(14)
         raiz.addWidget(etiqueta("Reporte de entregas", "tituloDialogo", False))
-        filtros = QHBoxLayout()
-        filtros.setSpacing(12)
+        raiz.addWidget(
+            etiqueta(
+                "Elige el periodo y el servicio: la tabla se actualiza sola y el "
+                "Excel sale con lo que ves aquí.",
+                "descripcionPantalla",
+            )
+        )
+
+        # --- tarjeta de filtros ----------------------------------------------
+        tarjeta = QFrame()
+        tarjeta.setObjectName("tarjetaFiltros")
+        filtros = QHBoxLayout(tarjeta)
+        filtros.setContentsMargins(18, 14, 18, 14)
+        filtros.setSpacing(14)
         hoy = QDate.currentDate()
         self.desde = QDateEdit(hoy)
         self.hasta = QDateEdit(hoy)
         for campo in (self.desde, self.hasta):
             campo.setCalendarPopup(True)
             campo.setDisplayFormat("yyyy-MM-dd")
+            campo.setMinimumWidth(150)
         self.servicio = QComboBox()
         self.servicio.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.servicio.setMinimumWidth(170)
+        self.servicio.setMinimumWidth(200)
         self.servicio.addItems(
             ["Todos los servicios", "Desayuno", "Almuerzo", "Refrigerio"]
         )
@@ -132,14 +152,36 @@ class DialogoReporteEntregas(QDialog):
             ("Servicio", self.servicio),
         ):
             caja = QVBoxLayout()
+            caja.setSpacing(6)
             caja.addWidget(etiqueta(texto, "etiquetaCampo", False))
             caja.addWidget(w)
             filtros.addLayout(caja)
-        self.btn_consultar = BotonPrincipal("Consultar")
-        self.btn_consultar.clicked.connect(self.consultar)
-        filtros.addWidget(self.btn_consultar, 0, Qt.AlignmentFlag.AlignBottom)
         filtros.addStretch()
-        raiz.addLayout(filtros)
+        rapidos = QVBoxLayout()
+        rapidos.setSpacing(6)
+        rapidos.addWidget(etiqueta("Rápido", "etiquetaCampo", False))
+        fila_rapida = QHBoxLayout()
+        fila_rapida.setSpacing(6)
+        for texto, dias in (("Hoy", 0), ("7 días", 6), ("Este mes", None)):
+            boton = QPushButton(texto)
+            boton.setObjectName("chipFiltro")
+            boton.setCursor(Qt.CursorShape.PointingHandCursor)
+            boton.clicked.connect(lambda _c=False, d=dias: self._rango_rapido(d))
+            fila_rapida.addWidget(boton)
+        rapidos.addLayout(fila_rapida)
+        filtros.addLayout(rapidos)
+        raiz.addWidget(tarjeta)
+
+        # Consulta automática al cambiar un filtro (con una pausa corta para no
+        # consultar en cada clic de la fecha).
+        self._espera = QTimer(self)
+        self._espera.setSingleShot(True)
+        self._espera.setInterval(300)
+        self._espera.timeout.connect(self.consultar)
+        self.desde.dateChanged.connect(self._programar)
+        self.hasta.dateChanged.connect(self._programar)
+        self.servicio.currentIndexChanged.connect(self._programar)
+
         self.aviso = Aviso("", "info")
         raiz.addWidget(self.aviso)
         self.tabla = QTableWidget(0, 5)
@@ -153,23 +195,55 @@ class DialogoReporteEntregas(QDialog):
         self.tabla.setAlternatingRowColors(True)
         self.tabla.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         raiz.addWidget(self.tabla, 1)
+
+        # --- pie: totales como badges + acciones -------------------------------
         pie = QHBoxLayout()
-        self.lbl_totales = etiqueta("", "textoSecundario")
-        pie.addWidget(self.lbl_totales, 1)
+        pie.setSpacing(8)
+        self.badges_totales = {}
+        for clave, texto in (
+            ("total", "Total"),
+            ("desayuno", "Desayuno"),
+            ("almuerzo", "Almuerzo"),
+            ("refrigerio", "Refrigerio"),
+        ):
+            badge = QLabel(f"{texto}  0")
+            badge.setObjectName("chipTotal")
+            badge.setProperty("principal", "true" if clave == "total" else "false")
+            badge.setFixedHeight(34)
+            self.badges_totales[clave] = (badge, texto)
+            pie.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_totales = etiqueta("", "textoSecundario")  # texto para lectores
+        self.lbl_totales.hide()
+        pie.addStretch()
         cerrar = BotonNeutro("Cerrar")
         cerrar.clicked.connect(self.accept)
-        self.btn_exportar = BotonSecundario("Exportar a Excel")
+        self.btn_exportar = BotonPrincipal("Exportar a Excel")
         self.btn_exportar.setEnabled(False)
         self.btn_exportar.clicked.connect(self.exportar)
         pie.addWidget(cerrar)
         pie.addWidget(self.btn_exportar)
         raiz.addLayout(pie)
+        self.tabla.setFocus()  # que no abra con la fecha seleccionada
+        self.consultar()
+
+    def _programar(self, *_):
+        self._espera.start()
+
+    def _rango_rapido(self, dias):
+        hoy = QDate.currentDate()
+        inicio = QDate(hoy.year(), hoy.month(), 1) if dias is None else hoy.addDays(-dias)
+        for campo in (self.desde, self.hasta):
+            campo.blockSignals(True)
+        self.desde.setDate(inicio)
+        self.hasta.setDate(hoy)
+        for campo in (self.desde, self.hasta):
+            campo.blockSignals(False)
         self.consultar()
 
     def consultar(self):
         servicio = self.servicio.currentText()
         servicio = None if servicio.startswith("Todos") else servicio
-        self.btn_consultar.setEnabled(False)
+        self.btn_exportar.setEnabled(False)
         ejecutar_en_segundo_plano(
             self._consultar,
             self.desde.date().toString("yyyy-MM-dd"),
@@ -180,7 +254,6 @@ class DialogoReporteEntregas(QDialog):
         )
 
     def _mostrar(self, reporte):
-        self.btn_consultar.setEnabled(True)
         self._reporte = reporte
         filas = reporte["detalle"]
         self.tabla.setRowCount(len(filas))
@@ -194,6 +267,9 @@ class DialogoReporteEntregas(QDialog):
             2, QHeaderView.ResizeMode.Stretch
         )
         t = reporte["totales"]
+        valores = {"total": reporte["total"], **t}
+        for clave, (badge, texto) in self.badges_totales.items():
+            badge.setText(f"{texto}  {valores.get(clave, 0)}")
         self.lbl_totales.setText(
             f"Total: {reporte['total']}  ·  Desayuno {t['desayuno']}  ·  Almuerzo {t['almuerzo']}  ·  Refrigerio {t['refrigerio']}"
         )
@@ -201,7 +277,6 @@ class DialogoReporteEntregas(QDialog):
         self.btn_exportar.setEnabled(bool(filas))
 
     def _error(self, error):
-        self.btn_consultar.setEnabled(True)
         texto = (
             str(error)
             if isinstance(error, ValueError)

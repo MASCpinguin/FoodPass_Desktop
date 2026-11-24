@@ -106,6 +106,9 @@ QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QSpinBox:focus { border: 2px 
 QComboBox { padding-right: 40px; }
 QComboBox:focus { padding-right: 39px; }
 QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: center right; width: 36px; border: none; background: transparent; }
+QDateEdit { padding-right: 40px; }
+QDateEdit::drop-down { subcontrol-origin: padding; subcontrol-position: center right; width: 36px; border: none; background: transparent; }
+QDateEdit::down-arrow { image: url("{RECURSOS}/icons/flecha_abajo.svg"); width: 16px; height: 16px; }
 QComboBox::down-arrow { image: url("{RECURSOS}/icons/flecha_abajo.svg"); width: 16px; height: 16px; }
 QLineEdit:disabled, QComboBox:disabled { background-color: #F1F5F9; color: #64748B; }
 QComboBox QAbstractItemView { background: #FFFFFF; selection-background-color: #FEEBDD; selection-color: #1E293B; }
@@ -255,3 +258,16 @@ QScrollArea#scrollLecturas QScrollBar::handle:vertical { background: #CBD5E1; bo
 QScrollArea#scrollLecturas QScrollBar::handle:vertical:hover { background: #94A3B8; }
 QScrollArea#scrollLecturas QScrollBar::add-line:vertical, QScrollArea#scrollLecturas QScrollBar::sub-line:vertical { height: 0; }
 QScrollArea#scrollLecturas QScrollBar::add-page:vertical, QScrollArea#scrollLecturas QScrollBar::sub-page:vertical { background: transparent; }
+/* Reporte de entregas: tarjeta de filtros, atajos y totales */
+QFrame#tarjetaFiltros { background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; }
+QPushButton#chipFiltro {
+    outline: none; background-color: #F8F9FA; color: #283618; border: 1px solid #CBD5E1;
+    border-radius: 23px; min-height: 46px; max-height: 46px; padding: 0 16px; font-size: 13px; font-weight: 500;
+}
+QPushButton#chipFiltro:hover { background-color: #FEEBDD; border-color: #F97F2D; }
+QLabel#chipTotal {
+    background-color: #F1F5F9; color: #475569; border-radius: 17px; padding: 0 14px;
+    font-size: 13px; font-weight: 500;
+}
+QLabel#chipTotal[principal="true"] { background-color: #283618; color: #FFFFFF; font-weight: 600; }
+QTableView, QTableWidget { outline: 0; }

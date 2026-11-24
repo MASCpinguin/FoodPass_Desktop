@@ -190,7 +190,7 @@ class LoginWindow(QWidget):
         caja.addSpacing(14)
 
         caja.addWidget(_etiqueta("CORREO", "etiquetaCampoLogin"))
-        self.campo_email = CampoTexto("operador@foodpass.com")
+        self.campo_email = CampoTexto("tucorreo@ejemplo.com")
         self.campo_email.setObjectName("campoLogin")
         self.campo_email.returnPressed.connect(self._enviar_login)
         caja.addWidget(self.campo_email)

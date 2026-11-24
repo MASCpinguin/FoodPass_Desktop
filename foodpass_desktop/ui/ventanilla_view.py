@@ -51,6 +51,20 @@ MAX_LECTURAS = 6
 _ESCALA_HORA = "%I:%M %p"
 
 
+def _motivo_corto(tipo, datos):
+    """Motivo breve para «Últimas lecturas» cuando no hay nombre que mostrar."""
+    if tipo == "no_beneficiario":
+        return "No está en la base"
+    mensaje = (datos.get("mensaje") or "").lower()
+    if "no encontrado" in mensaje:
+        return "Código no encontrado"
+    if "usado" in mensaje or "reemplazado" in mensaje:
+        return "Código ya usado"
+    if "venció" in mensaje:
+        return "Código vencido"
+    return "Código no reconocido"
+
+
 class DialogoCanjeManual(QDialog):
     """Barra de contingencia por documento (F2 · RF-ES21)."""
 
@@ -417,7 +431,9 @@ class VentanillaView(QWidget):
             self._agregar_lectura("Sin conexión", "error", "Sin conexión")
         else:
             self._agregar_lectura(
-                nombre if nombre != "—" else "Rechazado", "error", "Rechazado"
+                nombre if nombre != "—" else _motivo_corto(resultado.tipo, datos),
+                "error",
+                "Rechazado",
             )
         self.timer_limpieza.start(4000)
         self.input_codigo.setFocus()

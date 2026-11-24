@@ -85,6 +85,9 @@ class VentanaPrincipal(QMainWindow):
         for clave, titulo in PANTALLAS:
             boton = QPushButton(titulo)
             boton.setObjectName("botonNavegacion")
+            # El foco se queda en el contenido (campo de lectura de la ventanilla);
+            # así Windows no dibuja el recuadro punteado sobre el menú.
+            boton.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             boton.setCheckable(True)
             boton.setCursor(Qt.CursorShape.PointingHandCursor)
             boton.clicked.connect(lambda _c=False, c=clave: self.mostrar_pantalla(c))

@@ -36,6 +36,7 @@ QLabel#imagenLogo { background: transparent; }
 QLabel#subtituloMarca, QLabel#pieBarra { color: #CBD5E1; font-size: 11px; font-weight: 500; letter-spacing: 1px; }
 
 QPushButton#botonNavegacion {
+    outline: none;
     background-color: transparent;
     color: #E2E8F0;
     border: none;
@@ -72,6 +73,7 @@ QLabel#textoSecundario { color: #64748B; font-size: 13px; }
 
 /* --- Botones (alto mínimo 56 px, radius-sm) ------------------------------- */
 QPushButton {
+    outline: none;
     background-color: #FFFFFF; color: #283618; border: 1px solid #CBD5E1;
     border-radius: 8px; min-height: 56px; padding: 0 20px; font-size: 14px; font-weight: 500;
 }
@@ -239,3 +241,4 @@ QLabel#puntoMarcaLogin { background-color: #F97F2D; border-radius: 5px; }
 QLabel#itemMarcaLogin { color: #E2E8F0; font-size: 15px; font-weight: 500; }
 QFrame#separadorAcceso { background-color: #E2E8F0; border: none; }
 QLabel#ayudaAcceso { color: #64748B; font-size: 13px; }
+QPushButton#botonCerrarSesion, QPushButton#btnServicioPildora { outline: none; }

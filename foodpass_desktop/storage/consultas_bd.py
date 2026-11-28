@@ -128,17 +128,29 @@ def reporte_entregas(desde, hasta, servicio=None, conectar=bd.conexion):
     }
 
 
-def anular_canje(canje_id, registrado_en, conectar=bd.conexion, ahora=None):
-    """RF-ES34: anula dentro de los 2 minutos; libera el día (periodo NULL)."""
+def anular_canje(
+    canje_id, registrado_en, motivo=None, conectar=bd.conexion, ahora=None
+):
+    """RF-ES34: anula dentro de los 2 minutos; libera el día (periodo NULL).
+
+    El motivo se agrega al final de `detalle` («… · Anulado: Servicio
+    equivocado»): la base no tiene columna propia y así queda registrado sin
+    cambiar las tablas. El inicio de `detalle` no se toca (de ahí salen el
+    servicio y la modalidad en los reportes).
+    """
     ahora = ahora or ahora_bogota()
     if ahora - registrado_en > timedelta(minutes=MINUTOS_ANULACION):
         return False, "Ya no se puede anular: pasaron más de 2 minutos."
+    nota = (
+        f" · Anulado: {motivo.strip()}" if motivo and motivo.strip() else " · Anulado"
+    )
     with conectar() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE canjes SET estado = 'rechazado', periodo = NULL "
+                "UPDATE canjes SET estado = 'rechazado', periodo = NULL, "
+                "detalle = LEFT(CONCAT(COALESCE(detalle, ''), %s), 255) "
                 "WHERE id = %s AND estado = 'entregado'",
-                (canje_id,),
+                (nota, canje_id),
             )
             cambiados = cur.rowcount
         conn.commit()

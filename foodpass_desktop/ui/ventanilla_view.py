@@ -510,6 +510,7 @@ class VentanillaView(QWidget):
             self.canje_service.anular,
             canje["canje_id"],
             canje["registrado_en"],
+            dialogo.combo.currentText(),
             al_exito=self._anulacion_terminada,
             al_error=self._anulacion_fallida,
         )

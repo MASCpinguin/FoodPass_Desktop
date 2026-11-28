@@ -72,11 +72,12 @@ class CanjeService:
             return interpretar_codigo(texto) is not None
         return self.validar_contenido_qr(texto)[0]
 
-    def anular(self, canje_id, registrado_en):
-        """RF-ES34: anula un canje registrado en este equipo hace ≤ 2 min."""
+    def anular(self, canje_id, registrado_en, motivo=None):
+        """RF-ES34: anula un canje registrado en este equipo hace ≤ 2 min.
+        El motivo queda en `detalle` del canje."""
         from foodpass_desktop.storage.consultas_bd import anular_canje
 
-        return anular_canje(canje_id, registrado_en)
+        return anular_canje(canje_id, registrado_en, motivo)
 
     @staticmethod
     def validar_contenido_qr(contenido: str) -> tuple[bool, str]:

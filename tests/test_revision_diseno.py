@@ -184,3 +184,86 @@ def test_busqueda_sin_resultados_lo_dice(app):
 def test_fecha_legible_en_espanol():
     assert fecha_legible("2026-11-28") == "Sábado 28 de noviembre de 2026"
     assert fecha_legible("no-es-fecha") == "Día no-es-fecha"
+
+
+# --- motivo de anulación en `detalle` ---------------------------------------------
+class CursorFalso:
+    def __init__(self, registro):
+        self.registro = registro
+        self.rowcount = 1
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def execute(self, sql, params):
+        self.registro.append((sql, params))
+
+
+class ConexionFalsa:
+    def __init__(self):
+        self.consultas = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def cursor(self):
+        return CursorFalso(self.consultas)
+
+    def commit(self):
+        pass
+
+
+def test_anular_guarda_el_motivo_en_detalle():
+    from datetime import datetime
+
+    from foodpass_desktop.storage.consultas_bd import anular_canje
+
+    conexion = ConexionFalsa()
+    ahora = datetime(2026, 11, 28, 12, 0)
+    ok, _ = anular_canje(
+        7, ahora, "Servicio equivocado", conectar=lambda: conexion, ahora=ahora
+    )
+    assert ok
+    sql, params = conexion.consultas[0]
+    assert "detalle = LEFT(CONCAT(COALESCE(detalle, ''), %s), 255)" in sql
+    assert params == (" · Anulado: Servicio equivocado", 7)
+
+
+def test_la_ventanilla_manda_el_motivo_elegido(app, monkeypatch):
+    from datetime import datetime
+
+    from foodpass_desktop.ui import ventanilla_view as vv
+
+    llamadas = []
+
+    class Canje(CanjeFalso):
+        def anular(self, canje_id, registrado_en, motivo=None):
+            llamadas.append((canje_id, motivo))
+            return True, "Canje anulado."
+
+    class DialogoQueAcepta(vv.DialogoAnular):
+        def exec(self):
+            self.combo.setCurrentText("Servicio equivocado")
+            return QtWidgets.QDialog.DialogCode.Accepted
+
+    monkeypatch.setattr(vv, "DialogoAnular", DialogoQueAcepta)
+    monkeypatch.setattr(
+        vv,
+        "ejecutar_en_segundo_plano",
+        lambda f, *a, al_exito=None, al_error=None: al_exito(f(*a)),
+    )
+    vista = VentanillaView(servicio_canje=Canje())
+    vista._ultimo_canje = {
+        "canje_id": 7,
+        "registrado_en": datetime.now(),
+        "nombre": "Mateo Rodríguez",
+        "servicio": "Almuerzo",
+    }
+    vista.anular_ultimo()
+    assert llamadas == [(7, "Servicio equivocado")]

@@ -3,18 +3,20 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPixmap
+from PySide6.QtGui import QAction, QFont, QFontMetrics, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QLabel,
     QLineEdit,
     QProgressBar,
     QPushButton,
+    QToolButton,
     QVBoxLayout,
 )
 
 ALTO_BOTON = 56  # POS de escritorio: alto mínimo de la Guía
 CARPETA_IMG = Path(__file__).resolve().parents[2] / "resources" / "img"
+CARPETA_ICONOS = Path(__file__).resolve().parents[2] / "resources" / "icons"
 LOGOS = {
     "principal": CARPETA_IMG / "logo_foodpass.png",  # fondos claros
     "fondo_verde": CARPETA_IMG / "logo_fondo_verde.png",  # boleto blanco
@@ -75,6 +77,51 @@ class CampoTexto(QLineEdit):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
         self.setMinimumHeight(46)
+
+
+class CampoContrasena(CampoTexto):
+    """Campo de contraseña con el botón del ojo para ver lo que se escribe.
+
+    Arranca oculto. Al borrarse (login fallido, volver a la pantalla de acceso)
+    se oculta de nuevo, para que la contraseña no quede a la vista.
+    """
+
+    TEXTO_MOSTRAR = "Mostrar contraseña"
+    TEXTO_OCULTAR = "Ocultar contraseña"
+
+    def __init__(self, placeholder="", parent=None):
+        super().__init__(placeholder, parent)
+        self.setEchoMode(QLineEdit.EchoMode.Password)
+        self._icono_ver = QIcon(str(CARPETA_ICONOS / "ojo.svg"))
+        self._icono_ocultar = QIcon(str(CARPETA_ICONOS / "ojo_tachado.svg"))
+        self.accion_ver = QAction(self._icono_ver, self.TEXTO_MOSTRAR, self)
+        self.accion_ver.setObjectName("accionVerContrasena")
+        self.accion_ver.setCheckable(True)
+        self.accion_ver.toggled.connect(self._alternar)
+        self.addAction(self.accion_ver, QLineEdit.ActionPosition.TrailingPosition)
+        # Cursor de mano sobre el botón del ojo
+        for boton in self.findChildren(QToolButton):
+            if boton.defaultAction() is self.accion_ver:
+                boton.setCursor(Qt.CursorShape.PointingHandCursor)
+
+    def esta_visible(self):
+        return self.echoMode() == QLineEdit.EchoMode.Normal
+
+    def ocultar(self):
+        self.accion_ver.setChecked(False)
+
+    def clear(self):
+        super().clear()
+        self.ocultar()
+
+    def _alternar(self, ver):
+        self.setEchoMode(
+            QLineEdit.EchoMode.Normal if ver else QLineEdit.EchoMode.Password
+        )
+        self.accion_ver.setIcon(self._icono_ocultar if ver else self._icono_ver)
+        texto = self.TEXTO_OCULTAR if ver else self.TEXTO_MOSTRAR
+        self.accion_ver.setText(texto)
+        self.accion_ver.setToolTip(texto)
 
 
 class Tarjeta(QFrame):

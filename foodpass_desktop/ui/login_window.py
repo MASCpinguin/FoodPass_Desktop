@@ -31,6 +31,7 @@ from foodpass_desktop.services.auth_service import (
 from foodpass_desktop.ui.widgets import (
     BotonPrincipal,
     BotonSecundario,
+    CampoContrasena,
     CampoTexto,
     LogoFoodPass,
 )
@@ -197,9 +198,8 @@ class LoginWindow(QWidget):
         caja.addSpacing(6)
 
         caja.addWidget(_etiqueta("CONTRASEÑA", "etiquetaCampoLogin"))
-        self.campo_password = CampoTexto("Tu contraseña")
+        self.campo_password = CampoContrasena("Tu contraseña")
         self.campo_password.setObjectName("campoLogin")
-        self.campo_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.campo_password.returnPressed.connect(self._enviar_login)
         caja.addWidget(self.campo_password)
 

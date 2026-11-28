@@ -76,6 +76,31 @@ def test_la_contrasena_va_oculta(entorno):
     assert ventana.boton_ingresar.text() == "Ingresar"
 
 
+def test_el_ojo_muestra_y_oculta_la_contrasena(entorno):
+    _, auth, _ = entorno
+    ventana = login_mod.LoginWindow(auth)
+    campo = ventana.campo_password
+    ojo = campo.accion_ver
+    assert ojo.toolTip() == "Mostrar contraseña"
+
+    ojo.trigger()
+    assert campo.echoMode() == QtWidgets.QLineEdit.EchoMode.Normal
+    assert ojo.toolTip() == "Ocultar contraseña"
+
+    ojo.trigger()
+    assert campo.echoMode() == QtWidgets.QLineEdit.EchoMode.Password
+
+
+def test_login_fallido_vuelve_a_ocultar_la_contrasena(entorno):
+    _, auth, cliente = entorno
+    cliente.error = ApiError("CREDENCIALES_INVALIDAS", status=401)
+    ventana = login_mod.LoginWindow(auth)
+    ventana.campo_password.accion_ver.trigger()
+    escribir(ventana, "operador@foodpass.co", "mala")
+    assert ventana.campo_password.echoMode() == QtWidgets.QLineEdit.EchoMode.Password
+    assert not ventana.campo_password.accion_ver.isChecked()
+
+
 def test_correo_invalido_no_llama_a_la_api(entorno):
     _, auth, cliente = entorno
     ventana = login_mod.LoginWindow(auth)

@@ -151,7 +151,7 @@ class LoginWindow(QWidget):
         for texto in (
             "Un servicio al día por aprendiz, sin duplicados",
             "QR de la web y código del celular",
-            "Canje por documento cuando no hay código",
+            "Búsqueda por documento como respaldo del código",
             "Reportes listos en Excel",
         ):
             caja.addLayout(_punto_marca(texto))

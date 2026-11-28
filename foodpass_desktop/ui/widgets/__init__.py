@@ -1,5 +1,31 @@
 from foodpass_desktop.ui.widgets.componentes import (
-    BotonPrincipal, BotonSecundario, CampoTexto, Tarjeta,
+    Aviso,
+    Badge,
+    BotonDestructivo,
+    BotonNeutro,
+    BotonPrincipal,
+    BotonSecundario,
+    CampoContrasena,
+    CampoTexto,
+    LogoFoodPass,
+    Tarjeta,
+    TarjetaMetrica,
+    etiqueta,
+    refrescar_estilo,
 )
 
-__all__ = ["BotonPrincipal", "BotonSecundario", "CampoTexto", "Tarjeta"]
+__all__ = [
+    "Aviso",
+    "Badge",
+    "BotonDestructivo",
+    "BotonNeutro",
+    "BotonPrincipal",
+    "BotonSecundario",
+    "CampoContrasena",
+    "CampoTexto",
+    "LogoFoodPass",
+    "Tarjeta",
+    "TarjetaMetrica",
+    "etiqueta",
+    "refrescar_estilo",
+]

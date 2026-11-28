@@ -13,8 +13,10 @@ def cliente():
 
 
 def login(cliente, email="operador@foodpass.co", password="123456"):
-    return cliente.post(f"{P}/auth/login",
-                        json={"email": email, "password": password, "dispositivo": "PC-PRUEBA"})
+    return cliente.post(
+        f"{P}/auth/login",
+        json={"email": email, "password": password, "dispositivo": "PC-PRUEBA"},
+    )
 
 
 def test_estado_responde_con_hora(cliente):

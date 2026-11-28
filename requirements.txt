@@ -1,5 +1,6 @@
-PySide6
+PySide6-Essentials>=6.8
 requests
 python-dotenv
 openpyxl
 keyring
+PyMySQL

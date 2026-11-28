@@ -221,3 +221,6 @@ __marimo__/
 
 # Configuración local del editor
 .vscode/
+# Configuración del ejecutable del escritorio (sí se versiona)
+!FoodPass.spec
+.venv_build/

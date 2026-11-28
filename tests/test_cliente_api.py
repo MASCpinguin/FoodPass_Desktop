@@ -114,12 +114,10 @@ def test_error_sin_json_usa_codigo_generico(cliente, monkeypatch):
     assert e.value.codigo == "HTTP_500"
 
 
-
-
-
 def test_respuesta_204_sin_cuerpo_devuelve_vacio(cliente, monkeypatch):
     simular(cliente, monkeypatch, RespuestaFalsa(204, json_invalido=True))
     assert cliente.post("/auth/logout") == {}
+
 
 def test_renovar_guarda_el_token_nuevo(cliente, monkeypatch):
     nuevo = {"token": "NUEVO456", "expira": "2026-11-16T10:00:00-05:00"}
@@ -129,6 +127,3 @@ def test_renovar_guarda_el_token_nuevo(cliente, monkeypatch):
     assert llamadas[0]["url"].endswith("/auth/renovar")
     assert llamadas[0]["headers"]["Authorization"] == "Bearer TOKEN123"
     assert llamadas[1]["headers"]["Authorization"] == "Bearer NUEVO456"
-
-
-

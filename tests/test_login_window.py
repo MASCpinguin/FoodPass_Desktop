@@ -76,6 +76,31 @@ def test_la_contrasena_va_oculta(entorno):
     assert ventana.boton_ingresar.text() == "Ingresar"
 
 
+def test_el_ojo_muestra_y_oculta_la_contrasena(entorno):
+    _, auth, _ = entorno
+    ventana = login_mod.LoginWindow(auth)
+    campo = ventana.campo_password
+    ojo = campo.accion_ver
+    assert ojo.toolTip() == "Mostrar contraseña"
+
+    ojo.trigger()
+    assert campo.echoMode() == QtWidgets.QLineEdit.EchoMode.Normal
+    assert ojo.toolTip() == "Ocultar contraseña"
+
+    ojo.trigger()
+    assert campo.echoMode() == QtWidgets.QLineEdit.EchoMode.Password
+
+
+def test_login_fallido_vuelve_a_ocultar_la_contrasena(entorno):
+    _, auth, cliente = entorno
+    cliente.error = ApiError("CREDENCIALES_INVALIDAS", status=401)
+    ventana = login_mod.LoginWindow(auth)
+    ventana.campo_password.accion_ver.trigger()
+    escribir(ventana, "operador@foodpass.co", "mala")
+    assert ventana.campo_password.echoMode() == QtWidgets.QLineEdit.EchoMode.Password
+    assert not ventana.campo_password.accion_ver.isChecked()
+
+
 def test_correo_invalido_no_llama_a_la_api(entorno):
     _, auth, cliente = entorno
     ventana = login_mod.LoginWindow(auth)
@@ -115,7 +140,10 @@ def test_credenciales_invalidas_limpian_la_contrasena(entorno):
     cliente.error = ApiError("CREDENCIALES_INVALIDAS", status=401)
     ventana = login_mod.LoginWindow(auth)
     escribir(ventana, "operador@foodpass.co", "mala")
-    assert ventana.mensaje_acceso.text() == "Correo o contraseña incorrectos."
+    assert (
+        ventana.mensaje_acceso.text()
+        == "Correo o contraseña incorrectos. Inténtalo de nuevo."
+    )
     assert ventana.campo_password.text() == ""
     assert ventana.boton_ingresar.isEnabled()
 
@@ -127,11 +155,14 @@ def test_cuenta_bloqueada_muestra_cuenta_regresiva(entorno):
     )
     ventana = login_mod.LoginWindow(auth)
     escribir(ventana, "operador@foodpass.co", "mala")
-    assert ventana.mensaje_acceso.text() == "Cuenta bloqueada. Intenta de nuevo en 0:02."
+    assert (
+        ventana.mensaje_acceso.text()
+        == "Ingreso bloqueado por 0:02. ¿Olvidaste tu contraseña? Comunícate con soporte técnico."
+    )
     assert not ventana.boton_ingresar.isEnabled()
 
     ventana._avanzar_cuenta_regresiva()
-    assert ventana.mensaje_acceso.text().endswith("0:01.")
+    assert "0:01." in ventana.mensaje_acceso.text()
     ventana._avanzar_cuenta_regresiva()
     assert ventana.boton_ingresar.isEnabled()
     assert not ventana.cuenta_bloqueada

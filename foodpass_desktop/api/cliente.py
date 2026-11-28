@@ -6,12 +6,9 @@ import requests
 
 from foodpass_desktop.api.errores import ApiError, SinConexionError
 
-try:
-    from dotenv import load_dotenv
+from foodpass_desktop.core.config import cargar_env
 
-    load_dotenv(override=True)
-except ImportError:  # python-dotenv es opcional
-    pass
+cargar_env()
 
 URL_MOCK = "http://127.0.0.1:8000/api/v1/escritorio"
 TIMEOUT_SEGUNDOS = 3
@@ -21,8 +18,6 @@ RUTAS_SIN_TOKEN = {"/auth/login", "/estado"}
 def _leer_url_base():
     """API_URL manda. Si no está definida, se usa el servidor simulado."""
     return os.getenv("API_URL", "").strip() or URL_MOCK
-
-
 
 
 def _leer_json(respuesta):
@@ -51,8 +46,7 @@ class ClienteApi:
         """Renueva el token y lo guarda solo. Devuelve la respuesta."""
         datos = self.post("/auth/renovar")
         self.establecer_token(datos["token"])
-        return datos    
-     
+        return datos
 
     def al_expirar_sesion(self, callback):
         """Registra qué hacer ante un 401 (volver al inicio de sesión).
@@ -61,6 +55,16 @@ class ClienteApi:
         señal de Qt: `cliente.al_expirar_sesion(ventana.sesion_expirada.emit)`.
         """
         self._al_expirar = callback
+
+    def alcanzable(self, timeout=2):
+        """¿La API responde? Cualquier respuesta HTTP (incluso 404) cuenta como
+        encendida; solo un fallo de conexión o de tiempo es «sin conexión».
+        Para el indicador de conexión de la ventana principal."""
+        try:
+            self._sesion.get(self._base, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError):
+            return False
+        return True
 
     # --- métodos públicos -----------------------------------------------
     def get(self, ruta, params=None):

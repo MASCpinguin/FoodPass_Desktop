@@ -2,17 +2,27 @@ import ctypes
 import sys
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
+from foodpass_desktop.core.config import cargar_env
 
-from foodpass_desktop.api.cliente import cliente
-from foodpass_desktop.core.config import minutos_bloqueo
-from foodpass_desktop.core.sesion import ControladorSesion
-from foodpass_desktop.services.auth_service import AuthService
-from foodpass_desktop.storage.credenciales import crear_almacen
+cargar_env()  # antes de crear el cliente de la API: lee API_URL y DB_* del .env
+
+from PySide6.QtGui import QFontDatabase, QIcon  # noqa: E402
+from PySide6.QtWidgets import QApplication  # noqa: E402
+
+from foodpass_desktop.api.cliente import cliente  # noqa: E402
+from foodpass_desktop.core.config import minutos_bloqueo  # noqa: E402
+from foodpass_desktop.core.sesion import ControladorSesion  # noqa: E402
+from foodpass_desktop.services.auth_service import AuthService  # noqa: E402
+from foodpass_desktop.storage.credenciales import crear_almacen  # noqa: E402
+
+RECURSOS = Path(__file__).resolve().parent / "resources"
+ICONO = RECURSOS / "icons" / "foodpass.ico"
 
 
-ICONO = Path(__file__).resolve().parent / "resources" / "icons" / "foodpass.ico"
+def cargar_fuentes():
+    """Poppins (Guía de Estilos); si no carga, el QSS cae a Segoe UI."""
+    for archivo in sorted((RECURSOS / "fonts").glob("*.ttf")):
+        QFontDatabase.addApplicationFont(str(archivo))
 
 
 def main():
@@ -22,11 +32,12 @@ def main():
         )
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(str(ICONO)))
-    tema = Path(__file__).resolve().parent / "resources" / "tema.qss"
-    app.setStyleSheet(tema.read_text(encoding="utf-8"))
+    cargar_fuentes()
+    tema = (RECURSOS / "tema.qss").read_text(encoding="utf-8")
+    # Las imágenes del QSS se resuelven con la ruta real de los recursos
+    # (funciona igual en desarrollo y dentro del .exe).
+    app.setStyleSheet(tema.replace("{RECURSOS}", RECURSOS.as_posix()))
 
-    # T05: la app arranca en el inicio de sesión; la ventana principal se
-    # abre solo con un token válido.
     auth = AuthService(cliente, crear_almacen())
     sesion = ControladorSesion(app, auth, cliente, minutos_bloqueo())
     sesion.iniciar()

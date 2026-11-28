@@ -28,10 +28,39 @@ from foodpass_desktop.services.auth_service import (
     mensaje_bloqueo,
     validar_credenciales,
 )
-from foodpass_desktop.ui.widgets import BotonPrincipal, BotonSecundario, CampoTexto
+from foodpass_desktop.ui.widgets import (
+    BotonPrincipal,
+    BotonSecundario,
+    CampoContrasena,
+    CampoTexto,
+    LogoFoodPass,
+)
 
 TEXTO_INGRESAR = "Ingresar"
 TEXTO_INGRESANDO = "Ingresando…"
+
+
+ANCHO_TEXTO_TARJETA = 368  # 440 de tarjeta - 2 × 36 de margen
+
+
+def _ajustar_alto(etiqueta):
+    """El QStackedWidget no propaga el alto de los textos con ajuste de línea:
+    se fija el mínimo para que el texto nunca se corte ni se monte sobre otro.
+    Se usa el ancho fijo de la tarjeta: el ancho real puede no estar listo."""
+    etiqueta.ensurePolished()  # con la fuente del tema, no la de por defecto
+    etiqueta.setMinimumHeight(max(0, etiqueta.heightForWidth(ANCHO_TEXTO_TARJETA)))
+
+
+def _punto_marca(texto):
+    """Línea de beneficio del panel de marca: punto naranja + texto."""
+    fila = QHBoxLayout()
+    fila.setSpacing(12)
+    punto = QLabel()
+    punto.setObjectName("puntoMarcaLogin")
+    punto.setFixedSize(10, 10)
+    fila.addWidget(punto, 0, Qt.AlignmentFlag.AlignVCenter)
+    fila.addWidget(_etiqueta(texto, "itemMarcaLogin", True), 1)
+    return fila
 
 
 def _etiqueta(texto, nombre, envolver=False):
@@ -103,19 +132,30 @@ class LoginWindow(QWidget):
         caja = QVBoxLayout(panel)
         caja.setContentsMargins(56, 48, 56, 48)
         caja.setSpacing(16)
-        caja.addWidget(_etiqueta("FoodPass", "marcaLogin"))
-        caja.addWidget(_etiqueta("ESCRITORIO · CAFETERÍA", "subtituloMarcaLogin"))
-        caja.addStretch()
-        caja.addWidget(_etiqueta("Cada comida,\na tiempo.", "heroLogin", True))
+        caja.addStretch(2)
+        fila_logo = QHBoxLayout()
+        fila_logo.addWidget(LogoFoodPass(ancho_logo=260))
+        fila_logo.addStretch()
+        caja.addLayout(fila_logo)
+        caja.addSpacing(28)
+        caja.addWidget(_etiqueta("Verifica\nsin filas.", "heroLogin", True))
         caja.addWidget(
             _etiqueta(
-                "Verifica beneficiarios, registra ventas y entrega pedidos "
-                "desde un solo lugar.",
+                "Registra el canje del apoyo de alimentación en segundos: escanea el "
+                "código FoodPass y listo.",
                 "descripcionMarcaLogin",
                 True,
             )
         )
-        caja.addStretch()
+        caja.addSpacing(12)
+        for texto in (
+            "Un servicio al día por aprendiz, sin duplicados",
+            "QR de la web y código del celular",
+            "Búsqueda por documento como respaldo del código",
+            "Reportes listos en Excel",
+        ):
+            caja.addLayout(_punto_marca(texto))
+        caja.addStretch(3)
         caja.addWidget(_etiqueta("SENA · CEAI · ADSO 31", "pieMarcaLogin"))
         return panel
 
@@ -155,16 +195,15 @@ class LoginWindow(QWidget):
         caja.addSpacing(14)
 
         caja.addWidget(_etiqueta("CORREO", "etiquetaCampoLogin"))
-        self.campo_email = CampoTexto("operador@foodpass.co")
+        self.campo_email = CampoTexto("tucorreo@ejemplo.com")
         self.campo_email.setObjectName("campoLogin")
         self.campo_email.returnPressed.connect(self._enviar_login)
         caja.addWidget(self.campo_email)
         caja.addSpacing(6)
 
         caja.addWidget(_etiqueta("CONTRASEÑA", "etiquetaCampoLogin"))
-        self.campo_password = CampoTexto("Tu contraseña")
+        self.campo_password = CampoContrasena("Tu contraseña")
         self.campo_password.setObjectName("campoLogin")
-        self.campo_password.setEchoMode(QLineEdit.EchoMode.Password)
         self.campo_password.returnPressed.connect(self._enviar_login)
         caja.addWidget(self.campo_password)
 
@@ -181,6 +220,19 @@ class LoginWindow(QWidget):
         self.boton_ingresar.clicked.connect(self._enviar_login)
         caja.addWidget(self.boton_ingresar)
         caja.addStretch()
+        separador = QFrame()
+        separador.setObjectName("separadorAcceso")
+        separador.setFixedHeight(1)
+        caja.addWidget(separador)
+        caja.addSpacing(6)
+        caja.addWidget(
+            _etiqueta(
+                "Usa la cuenta de operador que te asignó soporte técnico. "
+                "Si olvidaste la contraseña, comunícate con ellos.",
+                "ayudaAcceso",
+                True,
+            )
+        )
         return vista
 
     def _crear_vista_pin(self):
@@ -238,9 +290,24 @@ class LoginWindow(QWidget):
         return campo
 
     # --- cambiar de vista ---------------------------------------------------
+    def _mostrar_vista(self, vista):
+        self.vistas.setCurrentWidget(vista)
+        self._ajustar_textos()
+
+    def _ajustar_textos(self):
+        """Fija el alto de todos los textos con ajuste de línea de la vista
+        actual (descripción, mensaje y ayuda) para que la tarjeta crezca."""
+        for texto in self.vistas.currentWidget().findChildren(QLabel):
+            if texto.wordWrap():
+                _ajustar_alto(texto)
+
+    def showEvent(self, evento):
+        super().showEvent(evento)
+        self._ajustar_textos()
+
     def mostrar_acceso(self, mensaje=None):
         """Vista de correo y contraseña. `mensaje` explica por qué se llegó aquí."""
-        self.vistas.setCurrentWidget(self.vista_acceso)
+        self._mostrar_vista(self.vista_acceso)
         self.setWindowTitle("FoodPass · Iniciar sesión")
         self.campo_password.clear()
         self._fijar_ocupado(False)
@@ -250,6 +317,11 @@ class LoginWindow(QWidget):
             self.mensaje_acceso.hide()
         destino = self.campo_password if self.campo_email.text() else self.campo_email
         destino.setFocus()
+        # Bloqueo local vigente (por ejemplo, tras reiniciar la aplicación)
+        consultar = getattr(self._auth, "segundos_bloqueo", None)
+        restantes = consultar() if callable(consultar) else 0
+        if restantes > 0 and not self._cuenta_regresiva.isActive():
+            self._iniciar_cuenta_regresiva(restantes)
 
     def mostrar_desbloqueo(self, operador=None):
         """Vista de PIN tras la inactividad. No muestra datos de la operación."""
@@ -284,7 +356,7 @@ class LoginWindow(QWidget):
         self.campo_pin.clear()
         self.campo_confirmacion.clear()
         self.mensaje_pin.hide()
-        self.vistas.setCurrentWidget(self.vista_pin)
+        self._mostrar_vista(self.vista_pin)
         self.setWindowTitle("FoodPass · " + self.titulo_pin.text())
         self.campo_pin.setFocus()
 
@@ -297,7 +369,9 @@ class LoginWindow(QWidget):
         codigo = validar_credenciales(email, password)
         if codigo:
             self._mostrar_mensaje(self.mensaje_acceso, MENSAJES[codigo])
-            campo = self.campo_email if codigo == "CORREO_INVALIDO" else self.campo_password
+            campo = (
+                self.campo_email if codigo == "CORREO_INVALIDO" else self.campo_password
+            )
             campo.setFocus()
             return
         self.mensaje_acceso.hide()
@@ -340,15 +414,22 @@ class LoginWindow(QWidget):
         self._segundos_bloqueo = int(segundos)
         self._cuenta_regresiva.start()
         self.boton_ingresar.setEnabled(False)
+        self.campo_email.setEnabled(False)
+        self.campo_password.setEnabled(False)
+        self.mensaje_acceso.setProperty("tipo", "aviso")
         self._mostrar_mensaje(self.mensaje_acceso, mensaje_bloqueo(segundos))
 
     def _avanzar_cuenta_regresiva(self):
         self._segundos_bloqueo -= 1
         if self._segundos_bloqueo > 0:
             self.mensaje_acceso.setText(mensaje_bloqueo(self._segundos_bloqueo))
+            _ajustar_alto(self.mensaje_acceso)
             return
         self._cuenta_regresiva.stop()
         self.mensaje_acceso.hide()
+        self.mensaje_acceso.setProperty("tipo", "error")
+        self.campo_email.setEnabled(True)
+        self.campo_password.setEnabled(True)
         self.boton_ingresar.setEnabled(True)
         self.campo_password.setFocus()
 
@@ -384,6 +465,7 @@ class LoginWindow(QWidget):
         etiqueta.setText(texto)
         etiqueta.show()
         _refrescar_estilo(etiqueta)
+        _ajustar_alto(etiqueta)
 
     @property
     def cuenta_bloqueada(self):

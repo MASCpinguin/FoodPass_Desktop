@@ -14,7 +14,7 @@ SERVICIOS = ("desayuno", "almuerzo", "refrigerio")
 
 
 MENSAJE_API_CAIDA = (
-    "La API de FoodPass no responde. Puedes seguir entregando, pero no cierres "
+    "La API de FoodPass no responde. Puedes seguir registrando canjes, pero no cierres "
     "sesión: no podrías volver a entrar hasta que la API vuelva. Avisa a soporte técnico."
 )
 
@@ -26,7 +26,7 @@ def calcular_alertas(resumen, conectado=True, api_conectada=True):
         alertas.append(
             (
                 "advertencia",
-                "No hay conexión con la base de datos. Las entregas no se pueden registrar.",
+                "No hay conexión con la base de datos. Los canjes no se pueden registrar.",
             )
         )
     if not api_conectada:
@@ -42,7 +42,7 @@ def calcular_alertas(resumen, conectado=True, api_conectada=True):
                 alertas.append(
                     (
                         "atencion",
-                        f"{s.capitalize()}: se superaron las raciones previstas ({hechas} de {meta}). Sigue entregando normalmente.",
+                        f"{s.capitalize()}: se superaron las raciones previstas ({hechas} de {meta}). Los canjes siguen normalmente.",
                     )
                 )
             elif porcentaje >= umbral:
@@ -64,7 +64,7 @@ class PanelView(QWidget):
         raiz.setSpacing(18)
         raiz.addWidget(etiqueta("Panel del día", "tituloPantalla", False))
         self.lbl_descripcion = etiqueta(
-            "Así va la entrega del apoyo de alimentación hoy.", "descripcionPantalla"
+            "Así van los canjes del apoyo de alimentación hoy.", "descripcionPantalla"
         )
         raiz.addWidget(self.lbl_descripcion)
 
@@ -79,7 +79,7 @@ class PanelView(QWidget):
 
         fila = QHBoxLayout()
         fila.setSpacing(16)
-        self.total = TarjetaMetrica("Total de entregas hoy", destacada=True)
+        self.total = TarjetaMetrica("Total de canjes hoy", destacada=True)
         self.anulados = TarjetaMetrica("Canjes anulados")
         self.manuales = TarjetaMetrica("Por documento (F2)")
         for t in (self.total, self.anulados, self.manuales):
@@ -115,7 +115,7 @@ class PanelView(QWidget):
             total = resumen["total"]
             self.total.fijar(
                 total,
-                "Aún no hay entregas hoy." if total == 0 else "entregas registradas",
+                "Aún no hay canjes hoy." if total == 0 else "canjes registrados",
             )
             self.anulados.fijar(resumen["anulados"], "liberaron el día del aprendiz")
             self.manuales.fijar(resumen["por_modalidad"]["manual"], "canjes sin código")

@@ -56,7 +56,7 @@ def exportar_entregas(reporte: dict, ruta: str | Path, ahora=None) -> Path:
     ahora = ahora or datetime.now()
     wb = Workbook()
     ws = wb.active
-    ws.title = "Entregas"
+    ws.title = "Canjes"
     ws.sheet_view.showGridLines = False
     linea = Side(style="thin", color="E2E8F0")
     borde = Border(left=linea, right=linea, top=linea, bottom=linea)
@@ -64,7 +64,7 @@ def exportar_entregas(reporte: dict, ruta: str | Path, ahora=None) -> Path:
     gris = Font(color="64748B", size=10)
 
     ws.merge_cells("A1:E1")
-    ws["A1"] = "FoodPass · Reporte de entregas del apoyo de alimentación"
+    ws["A1"] = "FoodPass · Reporte de canjes del apoyo de alimentación"
     ws["A1"].font = Font(bold=True, size=15, color=VERDE_SELVA)
     ws.row_dimensions[1].height = 26
     ws.merge_cells("A2:E2")
@@ -102,14 +102,14 @@ def exportar_entregas(reporte: dict, ruta: str | Path, ahora=None) -> Path:
         fila += 1
     if not detalle:
         ws.merge_cells(start_row=6, start_column=1, end_row=6, end_column=5)
-        ws.cell(row=6, column=1, value="No hay entregas en el periodo.").font = gris
+        ws.cell(row=6, column=1, value="No hay canjes en el periodo.").font = gris
         fila = 7
     else:
         ws.auto_filter.ref = f"A5:E{fila - 1}"
 
     # Totales por servicio: tabla pequeña debajo del detalle.
     fila += 1
-    _encabezado_tabla(ws, fila, ["Servicio", "Entregas"])
+    _encabezado_tabla(ws, fila, ["Servicio", "Canjes"])
     for col in (1, 2):
         ws.cell(row=fila, column=col).border = borde
     fila += 1
@@ -125,7 +125,10 @@ def exportar_entregas(reporte: dict, ruta: str | Path, ahora=None) -> Path:
         celda.font = Font(bold=True, color="1F7A24")
         celda.fill = verde_claro
         celda.border = Border(
-            left=linea, right=linea, bottom=linea, top=Side(style="medium", color="1F7A24")
+            left=linea,
+            right=linea,
+            bottom=linea,
+            top=Side(style="medium", color="1F7A24"),
         )
         if col == 2:
             celda.alignment = Alignment(horizontal="right")

@@ -5,7 +5,8 @@ detalle en lenguaje claro (RF-ES20, RNF-ES11). El avatar es de 200 × 200 px;
 la base no guarda fotos, así que muestra «Sin foto».
 """
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QRect, Qt
+from PySide6.QtGui import QFont, QFontMetrics
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout
 
 
@@ -17,7 +18,8 @@ def _refrescar_estilo(widget):
 
 ESTADOS = {
     "reposo": ("◎", "LISTO PARA ESCANEAR"),
-    "entregado": ("✓", "VALIDADO — {servicio} OK"),
+    # Espacios que no se parten: si el título no cabe, baja «ALMUERZO OK» completo.
+    "entregado": ("✓", "VALIDADO\u00a0— {servicio}\u00a0OK"),
     "ya_recibio": ("✕", "YA RECIBIÓ HOY"),
     "no_beneficiario": ("✕", "NO ESTÁ EN LA BASE"),
     "no_reconocido": ("✕", "CÓDIGO NO RECONOCIDO"),
@@ -89,9 +91,7 @@ class TarjetaResultado(QFrame):
         self.lbl_nombre = QLabel("")
         self.lbl_nombre.setObjectName("lblNombreAprendiz")
         self.lbl_nombre.setWordWrap(True)
-        self.lbl_nombre.setMinimumHeight(
-            92
-        )  # espacio para dos líneas de 32 px: nunca se corta
+        self._tamano_nombre = self.TAMANOS_NOMBRE[0]
         self.lbl_nombre.setAlignment(
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         )
@@ -113,6 +113,65 @@ class TarjetaResultado(QFrame):
         col.addWidget(self.lbl_detalles)
         col.addStretch()
         raiz.addLayout(col, 1)
+
+    TAMANOS_NOMBRE = (32, 28, 24, 20)  # px, del más grande al más pequeño
+    ANCHO_COMPACTO = 580  # por debajo (ventana de 1200 px) se usa el modo compacto
+
+    def _medir(self, texto, ancho, px):
+        fuente = QFont(self.lbl_nombre.font())
+        fuente.setPixelSize(px)
+        medidas = QFontMetrics(fuente)
+        alto = medidas.boundingRect(
+            QRect(0, 0, ancho, 10_000), Qt.TextFlag.TextWordWrap, texto
+        ).height()
+        return alto, round(alto / medidas.lineSpacing())
+
+    def _ajustar_nombre(self):
+        """El nombre usa 32 px. Si no cabe en una línea baja hasta 24 px; si
+        aun así no cabe, usa dos líneas desde 28 px hasta 20 px. Así un nombre
+        largo nunca se monta sobre el documento, ni con la ventana pequeña."""
+        self.lbl_nombre.ensurePolished()
+        texto = self.lbl_nombre.text()
+        ancho = self.lbl_nombre.width() if self.lbl_nombre.width() > 120 else 300
+        elegido = None
+        for px in self.TAMANOS_NOMBRE[:3]:
+            alto, lineas = self._medir(texto, ancho, px)
+            if lineas <= 1:
+                elegido = (px, alto)
+                break
+        if elegido is None:
+            for px in self.TAMANOS_NOMBRE[1:]:
+                alto, lineas = self._medir(texto, ancho, px)
+                elegido = (px, alto)
+                if lineas <= 2:
+                    break
+        px, alto = elegido
+        self._tamano_nombre = px
+        self.lbl_nombre.setStyleSheet(f"font-size: {px}px;")
+        self.lbl_nombre.setMinimumHeight(alto + 4)
+
+    def resizeEvent(self, evento):
+        super().resizeEvent(evento)
+        self._fijar_modo_compacto(self.width() < self.ANCHO_COMPACTO)
+        self._ajustar_nombre()
+
+    def _fijar_modo_compacto(self, compacto):
+        """Ventana pequeña (1200 × 700): avatar de 150 px, márgenes y título
+        más pequeños, para que el nombre y el documento quepan sin montarse."""
+        if getattr(self, "_compacto", None) == compacto:
+            return
+        self._compacto = compacto
+        lado = 150 if compacto else 200
+        self.recuadro_foto.setFixedSize(lado, lado)
+        self.recuadro_foto.setStyleSheet(f"border-radius: {lado // 2}px;")
+        if compacto:
+            self.layout().setContentsMargins(24, 16, 24, 16)
+            self.layout().setSpacing(20)
+            self.lbl_estado_titulo.setStyleSheet("font-size: 20px;")
+        else:
+            self.layout().setContentsMargins(32, 28, 32, 28)
+            self.layout().setSpacing(32)
+            self.lbl_estado_titulo.setStyleSheet("")
 
     def _aplicar_estado(self, estado, **formato):
         self._estado = estado
@@ -182,6 +241,7 @@ class TarjetaResultado(QFrame):
                     "No hay conexión con la base de datos. Avisa a soporte técnico.",
                 )
             )
+        self._ajustar_nombre()
 
     def _mostrar_documento(self, documento):
         if documento:
@@ -198,3 +258,4 @@ class TarjetaResultado(QFrame):
         self.lbl_detalles.setText(
             "Elige el servicio y escanea, o usa F2 para buscar por documento."
         )
+        self._ajustar_nombre()

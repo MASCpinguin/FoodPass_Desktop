@@ -137,7 +137,7 @@ def test_boton_anular_dice_a_quien_y_cuanto_queda(app):
         )
     )
     texto = vista.btn_anular.text()
-    assert texto.startswith("Anular entrega de Mateo")
+    assert texto.startswith("Anular canje de Mateo")
     assert texto.endswith(("2:00", "1:59"))
     vista._vencer_anulacion()
     assert vista.btn_anular.isHidden()
@@ -267,3 +267,27 @@ def test_la_ventanilla_manda_el_motivo_elegido(app, monkeypatch):
     }
     vista.anular_ultimo()
     assert llamadas == [(7, "Servicio equivocado")]
+
+
+def test_nombre_largo_baja_de_tamano_y_no_se_monta(app):
+    tarjeta = TarjetaResultado()
+    tarjeta.resize(516, 330)  # ventana de 1200 × 700
+    tarjeta.show()
+    tarjeta.mostrar_resultado(
+        "entregado", {"nombre": "Juan Pérez", "servicio": "Almuerzo"}
+    )
+    assert tarjeta._tamano_nombre == 32
+    tarjeta.mostrar_resultado(
+        "entregado",
+        {
+            "nombre": "María Fernanda de los Ángeles Castañeda Villamizar",
+            "servicio": "Almuerzo",
+        },
+    )
+    assert tarjeta._tamano_nombre < 32
+    assert (
+        tarjeta.lbl_nombre.minimumHeight()
+        >= tarjeta.lbl_nombre.heightForWidth(tarjeta.lbl_nombre.width()) - 8
+    )
+    assert tarjeta.recuadro_foto.width() == 150  # modo compacto
+    assert " OK" in tarjeta.lbl_estado_titulo.text()

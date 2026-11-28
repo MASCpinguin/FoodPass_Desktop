@@ -43,14 +43,14 @@ ESTADOS_CONEXION = {
     "sin_bd": (
         "sin_conexion",
         "Sin conexión",
-        "No se registran entregas",
+        "No se registran canjes",
         "No hay conexión con la base de datos. Avisa a soporte técnico.",
     ),
     "sin_api": (
         "parcial",
         "API sin conexión",
         "No cierres sesión",
-        "Las entregas siguen funcionando, pero sin la API no podrás volver a "
+        "Los canjes siguen funcionando, pero sin la API no podrás volver a "
         "iniciar sesión si la cierras. Avisa a soporte técnico.",
     ),
 }

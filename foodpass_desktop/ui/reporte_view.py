@@ -78,12 +78,12 @@ class ResumenView(QWidget):
         col = QVBoxLayout()
         col.addWidget(etiqueta("Resumen del día", "tituloPantalla", False))
         self.lbl_fecha = etiqueta(
-            "Se calcula con las entregas registradas. No se guarda.",
+            "Se calcula con los canjes registrados. No se guarda.",
             "descripcionPantalla",
         )
         col.addWidget(self.lbl_fecha)
         encabezado.addLayout(col, 1)
-        self.btn_reporte = BotonSecundario("Reporte de entregas")
+        self.btn_reporte = BotonSecundario("Reporte de canjes")
         self.btn_reporte.clicked.connect(self.abrir_reporte.emit)
         self.btn_actualizar = BotonPrincipal("Actualizar")
         self.btn_actualizar.clicked.connect(self.actualizar_solicitado.emit)
@@ -96,7 +96,7 @@ class ResumenView(QWidget):
 
         rejilla = QGridLayout()
         rejilla.setSpacing(16)
-        self.total = TarjetaMetrica("Total de entregas", destacada=True)
+        self.total = TarjetaMetrica("Total de canjes", destacada=True)
         rejilla.addWidget(self.total, 0, 0, 2, 1)
         self.servicios = {}
         for i, s in enumerate(("desayuno", "almuerzo", "refrigerio")):
@@ -105,7 +105,7 @@ class ResumenView(QWidget):
             rejilla.addWidget(t, 0, i + 1)
         self.por_codigo = TarjetaMetrica("Con código FoodPass")
         self.por_documento = TarjetaMetrica("Por documento (F2)")
-        self.anulados = TarjetaMetrica("Anulados")
+        self.anulados = TarjetaMetrica("Canjes anulados")
         rejilla.addWidget(self.por_codigo, 1, 1)
         rejilla.addWidget(self.por_documento, 1, 2)
         rejilla.addWidget(self.anulados, 1, 3)
@@ -121,10 +121,10 @@ class ResumenView(QWidget):
             return
         self.aviso.fijar("", "advertencia")
         self.lbl_fecha.setText(
-            f"{fecha_legible(resumen['fecha'])} · se calcula con las entregas "
-            "registradas. No se guarda."
+            f"{fecha_legible(resumen['fecha'])} · se calcula con los canjes "
+            "registrados. No se guarda."
         )
-        self.total.fijar(resumen["total"], "entregas del día")
+        self.total.fijar(resumen["total"], "canjes del día")
         for s, t in self.servicios.items():
             t.fijar(resumen["por_servicio"][s])
         self.por_codigo.fijar(resumen["por_modalidad"]["qr"])
@@ -143,12 +143,12 @@ class DialogoReporteEntregas(QDialog):
         super().__init__(parent)
         self._consultar = consultar
         self._reporte = None
-        self.setWindowTitle("Reporte de entregas")
+        self.setWindowTitle("Reporte de canjes")
         self.resize(980, 660)
         raiz = QVBoxLayout(self)
         raiz.setContentsMargins(28, 24, 28, 24)
         raiz.setSpacing(14)
-        raiz.addWidget(etiqueta("Reporte de entregas", "tituloDialogo", False))
+        raiz.addWidget(etiqueta("Reporte de canjes", "tituloDialogo", False))
         raiz.addWidget(
             etiqueta(
                 "Elige el periodo y el servicio: la tabla se actualiza sola y el "
@@ -308,7 +308,7 @@ class DialogoReporteEntregas(QDialog):
         self.lbl_totales.setText(
             f"Total: {reporte['total']}  ·  Desayuno {t['desayuno']}  ·  Almuerzo {t['almuerzo']}  ·  Refrigerio {t['refrigerio']}"
         )
-        self.aviso.fijar("" if filas else "No hay entregas en el periodo.", "info")
+        self.aviso.fijar("" if filas else "No hay canjes en el periodo.", "info")
         self.btn_exportar.setEnabled(bool(filas))
 
     def _error(self, error):
@@ -326,7 +326,7 @@ class DialogoReporteEntregas(QDialog):
         carpeta = Path.home() / "Documents"
         sugerido = str(
             (carpeta if carpeta.exists() else Path.home())
-            / reportes_service.nombre_archivo("Entregas")
+            / reportes_service.nombre_archivo("Canjes")
         )
         ruta, _ = QFileDialog.getSaveFileName(
             self, "Guardar reporte", sugerido, "Excel (*.xlsx)"

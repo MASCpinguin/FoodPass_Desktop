@@ -74,13 +74,13 @@ class DialogoCanjeManual(QDialog):
         super().__init__(parent)
         self.servicio = servicio
         self.setObjectName("dialogoCanjeManual")
-        self.setWindowTitle("Canje manual por documento")
+        self.setWindowTitle("Canje por documento")
         self.setModal(True)
         self.setFixedWidth(460)
         caja = QVBoxLayout(self)
         caja.setContentsMargins(28, 28, 28, 28)
         caja.setSpacing(12)
-        caja.addWidget(etiqueta("Canje manual", "tituloDialogoManual"))
+        caja.addWidget(etiqueta("Canje por documento", "tituloDialogoManual"))
         caja.addWidget(
             etiqueta(
                 f"Servicio: {servicio}. Busca al aprendiz por su número de documento.",
@@ -149,7 +149,7 @@ class DialogoAnular(QDialog):
         caja.addWidget(etiqueta("Anular canje", "tituloDialogo"))
         caja.addWidget(
             etiqueta(
-                f"Vas a anular la entrega de {nombre}. El día queda libre para el aprendiz verdadero.",
+                f"Vas a anular el canje de {nombre}. El día queda libre para el aprendiz verdadero.",
                 "textoSecundario",
             )
         )
@@ -262,7 +262,7 @@ class VentanillaView(QWidget):
         self.input_codigo.setEnabled(False)
         self.input_codigo.returnPressed.connect(self.procesar_codigo)
         fila_l.addWidget(self.input_codigo, 1)
-        self.btn_manual = QPushButton("Canje manual  F2")
+        self.btn_manual = QPushButton("Canje por documento  F2")
         self.btn_manual.setObjectName("btnAtajoManual")
         self.btn_manual.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_manual.setEnabled(False)
@@ -282,7 +282,7 @@ class VentanillaView(QWidget):
         self.btn_anular.clicked.connect(self.anular_ultimo)
         acciones.addWidget(self.btn_anular)
         acciones.addStretch()
-        self.btn_reporte = BotonSecundario("Reporte de entregas")
+        self.btn_reporte = BotonSecundario("Reporte de canjes")
         self.btn_reporte.clicked.connect(self.abrir_reporte.emit)
         acciones.addWidget(self.btn_reporte)
         izquierda.addLayout(acciones)
@@ -290,7 +290,7 @@ class VentanillaView(QWidget):
 
         derecha = QVBoxLayout()
         derecha.setSpacing(12)
-        self.metrica = TarjetaMetrica("Entregas del servicio", con_barra=True)
+        self.metrica = TarjetaMetrica("Canjes del servicio", con_barra=True)
         derecha.addWidget(self.metrica)
         panel = QFrame()
         panel.setObjectName("panelLecturas")
@@ -367,12 +367,12 @@ class VentanillaView(QWidget):
 
     def _actualizar_metrica(self):
         if not self.servicio_actual:
-            self.metrica.lbl_etiqueta.setText("Entregas del servicio")
+            self.metrica.lbl_etiqueta.setText("Canjes del servicio")
             self.metrica.fijar("—", "Elige un servicio para ver su avance.", 0)
             return
         previstas = raciones_previstas()[self.servicio_actual.lower()]
         hechas = self._contador[self.servicio_actual]
-        self.metrica.lbl_etiqueta.setText(f"{self.servicio_actual} · entregas de hoy")
+        self.metrica.lbl_etiqueta.setText(f"{self.servicio_actual} · canjes de hoy")
         self.metrica.fijar(
             hechas, f"de {previstas} previstas", hechas * 100 / max(previstas, 1)
         )
@@ -488,7 +488,7 @@ class VentanillaView(QWidget):
         self.tarjeta.mostrar_resultado(
             "error_conexion",
             {
-                "mensaje": "No se pudo registrar la entrega. Inténtalo de nuevo o avisa a soporte técnico."
+                "mensaje": "No se pudo registrar el canje. Inténtalo de nuevo o avisa a soporte técnico."
             },
         )
         self.timer_limpieza.start(4000)
@@ -554,10 +554,10 @@ class VentanillaView(QWidget):
         nombre = (canje.get("nombre") or "").split()
         quien = f" de {nombre[0]}" if nombre and nombre[0] != "—" else ""
         self.btn_anular.setText(
-            f"Anular entrega{quien}  {restante // 60}:{restante % 60:02d}"
+            f"Anular canje{quien}  {restante // 60}:{restante % 60:02d}"
         )
         self.btn_anular.setToolTip(
-            f"Anula la entrega de {canje.get('nombre', '')}. "
+            f"Anula el canje de {canje.get('nombre', '')}. "
             "Solo se puede durante los 2 minutos siguientes."
         )
 

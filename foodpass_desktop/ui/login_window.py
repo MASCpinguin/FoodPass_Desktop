@@ -141,7 +141,7 @@ class LoginWindow(QWidget):
         caja.addWidget(_etiqueta("Verifica\nsin filas.", "heroLogin", True))
         caja.addWidget(
             _etiqueta(
-                "Entrega el apoyo de alimentación en segundos: escanea el "
+                "Registra el canje del apoyo de alimentación en segundos: escanea el "
                 "código FoodPass y listo.",
                 "descripcionMarcaLogin",
                 True,

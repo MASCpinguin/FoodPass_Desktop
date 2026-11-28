@@ -2,6 +2,7 @@
 entregas con exportación a Excel (RF-ES24 · CU-06).
 """
 
+from datetime import date
 from pathlib import Path
 
 from PySide6.QtCore import QDate, Qt, QTimer, Signal
@@ -33,6 +34,34 @@ from foodpass_desktop.ui.widgets import (
     TarjetaMetrica,
     etiqueta,
 )
+
+
+DIAS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
+MESES = (
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+)
+
+
+def fecha_legible(fecha):
+    """«2026-11-28» -> «Sábado 28 de noviembre de 2026» (sin depender del idioma de Windows)."""
+    try:
+        d = date.fromisoformat(str(fecha)[:10])
+    except ValueError:
+        return f"Día {fecha}"
+    return (
+        f"{DIAS[d.weekday()].capitalize()} {d.day} de {MESES[d.month - 1]} de {d.year}"
+    )
 
 
 class ResumenView(QWidget):
@@ -92,7 +121,8 @@ class ResumenView(QWidget):
             return
         self.aviso.fijar("", "advertencia")
         self.lbl_fecha.setText(
-            f"Día {resumen['fecha']} · se calcula con las entregas registradas. No se guarda."
+            f"{fecha_legible(resumen['fecha'])} · se calcula con las entregas "
+            "registradas. No se guarda."
         )
         self.total.fijar(resumen["total"], "entregas del día")
         for s, t in self.servicios.items():
@@ -192,6 +222,9 @@ class DialogoReporteEntregas(QDialog):
             2, QHeaderView.ResizeMode.Stretch
         )
         self.tabla.verticalHeader().setVisible(False)
+        self.tabla.horizontalHeader().setDefaultAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self.tabla.setAlternatingRowColors(True)
         self.tabla.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         raiz.addWidget(self.tabla, 1)
@@ -231,7 +264,9 @@ class DialogoReporteEntregas(QDialog):
 
     def _rango_rapido(self, dias):
         hoy = QDate.currentDate()
-        inicio = QDate(hoy.year(), hoy.month(), 1) if dias is None else hoy.addDays(-dias)
+        inicio = (
+            QDate(hoy.year(), hoy.month(), 1) if dias is None else hoy.addDays(-dias)
+        )
         for campo in (self.desde, self.hasta):
             campo.blockSignals(True)
         self.desde.setDate(inicio)

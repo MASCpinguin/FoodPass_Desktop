@@ -40,6 +40,10 @@ def _tabla(columnas):
     tabla.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
     tabla.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
     tabla.horizontalHeader().setStretchLastSection(True)
+    # Encabezados alineados con el contenido (a la izquierda), no centrados
+    tabla.horizontalHeader().setDefaultAlignment(
+        Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+    )
     return tabla
 
 
@@ -130,14 +134,24 @@ class DialogoBeneficiario(QDialog):
         ):
             raiz.addWidget(etiqueta(texto, "etiquetaCampo", False))
             campo = QLineEdit(str(self.beneficiario.get(clave, "")))
+            campo.setPlaceholderText(
+                {
+                    "numero_documento": "Solo números, ej. 1001001100",
+                    "nombre_completo": "Como aparece en la lista del SENA",
+                    "email": "aprendiz@soy.sena.edu.co",
+                }[clave]
+            )
             self.campos[clave] = campo
             raiz.addWidget(campo)
         raiz.addWidget(etiqueta("Estado", "etiquetaCampo", False))
         self.estado = QComboBox()
         self.estado.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.estado.setMinimumWidth(170)
-        self.estado.addItems(["activo", "inactivo"])
-        self.estado.setCurrentText(self.beneficiario.get("estado", "activo"))
+        # Se muestra con mayúscula, igual que en la tabla; se guarda en minúscula
+        self.estado.addItem("Activo", "activo")
+        self.estado.addItem("Inactivo", "inactivo")
+        indice = self.estado.findData(self.beneficiario.get("estado", "activo"))
+        self.estado.setCurrentIndex(max(0, indice))
         raiz.addWidget(self.estado)
         self.error = etiqueta("", "errorDialogo")
         raiz.addWidget(self.error)
@@ -164,7 +178,7 @@ class DialogoBeneficiario(QDialog):
 
     def datos(self):
         d = {k: c.text().strip() for k, c in self.campos.items()}
-        d["estado"] = self.estado.currentText()
+        d["estado"] = self.estado.currentData()
         if self.beneficiario.get("id"):
             d["id"] = self.beneficiario["id"]
         return d
@@ -233,7 +247,12 @@ class BeneficiariosView(QWidget):
         cabecera.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
         cabecera.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.tabla.doubleClicked.connect(self._editar_fila)
+        self.tabla.setToolTip("Doble clic en una fila para editar al beneficiario.")
         raiz.addWidget(self.tabla, 1)
+        self.lbl_vacio = etiqueta("", "textoSecundario", True)
+        self.lbl_vacio.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_vacio.hide()
+        raiz.addWidget(self.lbl_vacio)
 
         pie = QHBoxLayout()
         self.lbl_pagina = etiqueta("", "textoSecundario", False)
@@ -297,9 +316,20 @@ class BeneficiariosView(QWidget):
                 )
                 item.setData(Qt.ItemDataRole.UserRole, b)
                 self.tabla.setItem(i, j, item)
+        total = len(self._filtrados)
         self.lbl_pagina.setText(
-            f"{len(self._filtrados)} resultados · página {self._pagina + 1} de {paginas}"
+            f"{total} {'resultado' if total == 1 else 'resultados'} · "
+            f"página {self._pagina + 1} de {paginas} · doble clic en una fila para editar"
         )
+        if total == 0 and self._todos:
+            self.lbl_vacio.setText(
+                "No hay beneficiarios que coincidan con la búsqueda y el filtro."
+            )
+        elif total == 0:
+            self.lbl_vacio.setText(
+                "Aún no hay beneficiarios. Descarga la plantilla, llénala e impórtala."
+            )
+        self.lbl_vacio.setVisible(total == 0)
         self.btn_anterior.setEnabled(self._pagina > 0)
         self.btn_siguiente.setEnabled(self._pagina < paginas - 1)
 
@@ -370,7 +400,13 @@ class BeneficiariosView(QWidget):
             consultas_bd.guardar_beneficiario,
             dialogo.datos(),
             al_exito=self._guardado,
-            al_error=self._error,
+            al_error=self._error_guardar,
+        )
+
+    def _error_guardar(self, _error):
+        self.aviso.fijar(
+            "No se pudo guardar el beneficiario. Revisa la conexión o avisa a soporte técnico.",
+            "error",
         )
 
     def _guardado(self, resultado):

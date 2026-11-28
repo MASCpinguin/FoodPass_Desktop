@@ -13,7 +13,13 @@ from foodpass_desktop.ui.widgets import Aviso, TarjetaMetrica, etiqueta
 SERVICIOS = ("desayuno", "almuerzo", "refrigerio")
 
 
-def calcular_alertas(resumen, conectado=True):
+MENSAJE_API_CAIDA = (
+    "La API de FoodPass no responde. Puedes seguir entregando, pero no cierres "
+    "sesión: no podrías volver a entrar hasta que la API vuelva. Avisa a soporte técnico."
+)
+
+
+def calcular_alertas(resumen, conectado=True, api_conectada=True):
     """RF-ES11: servicio al umbral de lo previsto o sin conexión (no bloquean)."""
     alertas = []
     if not conectado:
@@ -23,6 +29,8 @@ def calcular_alertas(resumen, conectado=True):
                 "No hay conexión con la base de datos. Las entregas no se pueden registrar.",
             )
         )
+    if not api_conectada:
+        alertas.append(("advertencia", MENSAJE_API_CAIDA))
     if resumen:
         previstas = raciones_previstas()
         umbral = porcentaje_alerta()
@@ -87,7 +95,7 @@ class PanelView(QWidget):
         raiz.addStretch()
         self.actualizar(None, conectado=True)
 
-    def actualizar(self, resumen, conectado=True):
+    def actualizar(self, resumen, conectado=True, api_conectada=True):
         if resumen is None:
             resumen = getattr(
                 self, "_ultimo", None
@@ -114,8 +122,12 @@ class PanelView(QWidget):
         while self.caja_alertas.count():
             w = self.caja_alertas.takeAt(0).widget()
             if w:
+                # Se oculta y se suelta ya: si no, queda pintada en la esquina
+                # superior hasta que Qt la borre.
+                w.hide()
+                w.setParent(None)
                 w.deleteLater()
-        alertas = calcular_alertas(resumen, conectado)
+        alertas = calcular_alertas(resumen, conectado, api_conectada)
         for tipo, texto in alertas:
             self.caja_alertas.addWidget(Aviso(texto, tipo))
         self.sin_alertas.setVisible(not alertas)

@@ -54,7 +54,11 @@ QPushButton#botonNavegacion:focus { border: 3px solid #F97F2D; }
 QFrame#indicadorConexion { background-color: #34451F; border-radius: 8px; }
 QLabel#textoConexion { color: #FFFFFF; font-size: 13px; font-weight: 500; }
 QLabel#puntoConexion[estado="conectado"] { color: #2F9B34; font-size: 16px; }
-QLabel#puntoConexion[estado="sin_conexion"] { color: #F0AD4E; font-size: 16px; }
+QLabel#puntoConexion[estado="sin_conexion"] { color: #E5534B; font-size: 16px; }
+QLabel#puntoConexion[estado="parcial"] { color: #F0AD4E; font-size: 16px; }
+QFrame#indicadorConexion[estado="sin_conexion"] { background-color: #5C1F1C; border: 1px solid #E5534B; }
+QFrame#indicadorConexion[estado="parcial"] { background-color: #4A3A12; border: 1px solid #F0AD4E; }
+QLabel#detalleConexion { color: #FDE7C2; font-size: 12px; }
 
 QFrame#tarjetaOperador { background-color: #34451F; border: none; border-radius: 12px; }
 QLabel#etiquetaOperador { color: #CBD5E1; font-size: 11px; font-weight: 500; }
@@ -200,6 +204,12 @@ QFrame#tarjetaResultado[estado="anulado"] { border: 3px solid #475569; backgroun
 QFrame#recuadroFoto { background-color: #E2E8F0; border: none; border-radius: 100px; }
 QLabel#lblSinFoto { color: #475569; font-size: 13px; font-weight: 500; }
 QLabel#lblEstadoIcono { font-size: 30px; font-weight: 700; color: #283618; }
+QLabel#lblEstadoIcono[estado="entregado"] { color: #1F7A24; }
+QLabel#lblEstadoIcono[estado="ya_recibio"],
+QLabel#lblEstadoIcono[estado="no_beneficiario"],
+QLabel#lblEstadoIcono[estado="no_reconocido"] { color: #B92F2B; }
+QLabel#lblEstadoIcono[estado="error_conexion"] { color: #7A5300; }
+QLabel#lblEstadoIcono[estado="anulado"] { color: #475569; }
 QLabel#lblEstadoTitulo { font-size: 24px; font-weight: 700; color: #283618; }
 QLabel#lblEstadoTitulo[estado="entregado"] { color: #1F7A24; }
 QLabel#lblEstadoTitulo[estado="ya_recibio"],

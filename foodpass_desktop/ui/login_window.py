@@ -40,11 +40,15 @@ TEXTO_INGRESAR = "Ingresar"
 TEXTO_INGRESANDO = "Ingresando…"
 
 
+ANCHO_TEXTO_TARJETA = 368  # 440 de tarjeta - 2 × 36 de margen
+
+
 def _ajustar_alto(etiqueta):
     """El QStackedWidget no propaga el alto de los textos con ajuste de línea:
-    se fija el mínimo para que el mensaje nunca se corte."""
-    ancho = etiqueta.width() if etiqueta.width() > 50 else 368
-    etiqueta.setMinimumHeight(etiqueta.heightForWidth(ancho))
+    se fija el mínimo para que el texto nunca se corte ni se monte sobre otro.
+    Se usa el ancho fijo de la tarjeta: el ancho real puede no estar listo."""
+    etiqueta.ensurePolished()  # con la fuente del tema, no la de por defecto
+    etiqueta.setMinimumHeight(max(0, etiqueta.heightForWidth(ANCHO_TEXTO_TARJETA)))
 
 
 def _punto_marca(texto):
@@ -288,6 +292,18 @@ class LoginWindow(QWidget):
     # --- cambiar de vista ---------------------------------------------------
     def _mostrar_vista(self, vista):
         self.vistas.setCurrentWidget(vista)
+        self._ajustar_textos()
+
+    def _ajustar_textos(self):
+        """Fija el alto de todos los textos con ajuste de línea de la vista
+        actual (descripción, mensaje y ayuda) para que la tarjeta crezca."""
+        for texto in self.vistas.currentWidget().findChildren(QLabel):
+            if texto.wordWrap():
+                _ajustar_alto(texto)
+
+    def showEvent(self, evento):
+        super().showEvent(evento)
+        self._ajustar_textos()
 
     def mostrar_acceso(self, mensaje=None):
         """Vista de correo y contraseña. `mensaje` explica por qué se llegó aquí."""

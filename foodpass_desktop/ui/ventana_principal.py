@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from foodpass_desktop.api.cliente import cliente as cliente_api
 from foodpass_desktop.api.trabajador import ejecutar_en_segundo_plano
 from foodpass_desktop.storage import bd, consultas_bd
 from foodpass_desktop.ui.beneficiarios_view import BeneficiariosView
@@ -36,15 +37,35 @@ PANTALLAS = (
 REFRESCO_MS = 30_000
 CONEXION_MS = 5_000
 
+# Indicador de conexión: (estado para el QSS, texto, detalle, ayuda)
+ESTADOS_CONEXION = {
+    "conectado": ("conectado", "Conectado", "", "Base de datos y API en línea."),
+    "sin_bd": (
+        "sin_conexion",
+        "Sin conexión",
+        "No se registran entregas",
+        "No hay conexión con la base de datos. Avisa a soporte técnico.",
+    ),
+    "sin_api": (
+        "parcial",
+        "API sin conexión",
+        "No cierres sesión",
+        "Las entregas siguen funcionando, pero sin la API no podrás volver a "
+        "iniciar sesión si la cierras. Avisa a soporte técnico.",
+    ),
+}
+
 
 class VentanaPrincipal(QMainWindow):
     cerrar_sesion_solicitado = Signal()
 
-    def __init__(self, parent=None, operador=None, usar_bd=None):
+    def __init__(self, parent=None, operador=None, usar_bd=None, api=None):
         super().__init__(parent)
         self.operador = operador or {}
         self._usar_bd = bd.configurada() if usar_bd is None else usar_bd
+        self._api = api or cliente_api
         self._conectado = True
+        self._api_conectada = True
         self._consultando = False
         self.setWindowTitle("FoodPass · Escritorio")
         self.resize(1366, 768)
@@ -130,24 +151,44 @@ class VentanaPrincipal(QMainWindow):
     def _crear_indicador(self):
         marco = QFrame()
         marco.setObjectName("indicadorConexion")
+        self.marco_conexion = marco
         fila = QHBoxLayout(marco)
         fila.setContentsMargins(14, 10, 14, 10)
         self.punto_conexion = QLabel("●")
         self.punto_conexion.setObjectName("puntoConexion")
+        textos = QVBoxLayout()
+        textos.setSpacing(0)
         self.texto_conexion = QLabel("Conectado")
         self.texto_conexion.setObjectName("textoConexion")
-        fila.addWidget(self.punto_conexion)
-        fila.addWidget(self.texto_conexion, 1)
+        self.detalle_conexion = QLabel("")
+        self.detalle_conexion.setObjectName("detalleConexion")
+        self.detalle_conexion.hide()
+        textos.addWidget(self.texto_conexion)
+        textos.addWidget(self.detalle_conexion)
+        fila.addWidget(self.punto_conexion, 0, Qt.AlignmentFlag.AlignTop)
+        fila.addLayout(textos, 1)
         self._pintar_conexion(True)
         return marco
 
-    def _pintar_conexion(self, conectado):
+    def _pintar_conexion(self, conectado, api_conectada=None):
+        """Base de datos (entregas) y API (inicio de sesión) por separado."""
         self._conectado = conectado
-        self.punto_conexion.setProperty(
-            "estado", "conectado" if conectado else "sin_conexion"
-        )
-        refrescar_estilo(self.punto_conexion)
-        self.texto_conexion.setText("Conectado" if conectado else "Sin conexión")
+        if api_conectada is not None:
+            self._api_conectada = api_conectada
+        if not conectado:
+            clave = "sin_bd"
+        elif not self._api_conectada:
+            clave = "sin_api"
+        else:
+            clave = "conectado"
+        estado, texto, detalle, ayuda = ESTADOS_CONEXION[clave]
+        for widget in (self.punto_conexion, self.marco_conexion):
+            widget.setProperty("estado", estado)
+            refrescar_estilo(widget)
+        self.texto_conexion.setText(texto)
+        self.detalle_conexion.setText(detalle)
+        self.detalle_conexion.setVisible(bool(detalle))
+        self.marco_conexion.setToolTip(ayuda)
 
     def _crear_tarjeta_operador(self):
         tarjeta = QFrame()
@@ -193,23 +234,31 @@ class VentanaPrincipal(QMainWindow):
     def _resumen_listo(self, resumen):
         self._consultando = False
         self._pintar_conexion(True)
-        self.panel.actualizar(resumen, True)
+        self.panel.actualizar(resumen, True, self._api_conectada)
         self.resumen.actualizar(resumen, True)
         self.ventanilla.fijar_conteo_del_dia(resumen["por_servicio"])
 
     def _resumen_fallo(self, _error):
         self._consultando = False
         self._pintar_conexion(False)
-        self.panel.actualizar(None, False)
+        self.panel.actualizar(None, False, self._api_conectada)
         self.resumen.actualizar(None, False)
 
     def probar_conexion(self):
-        ejecutar_en_segundo_plano(bd.probar, al_exito=self._conexion_probada)
+        ejecutar_en_segundo_plano(self._probar_todo, al_exito=self._conexion_probada)
 
-    def _conexion_probada(self, ok):
+    def _probar_todo(self):
+        """En segundo plano: (base de datos, API)."""
+        return bool(bd.probar()), bool(self._api.alcanzable())
+
+    def _conexion_probada(self, resultado):
+        ok, api_ok = resultado
         estaba = self._conectado
-        self._pintar_conexion(bool(ok))
+        api_estaba = self._api_conectada
+        self._pintar_conexion(ok, api_ok)
         if ok and not estaba:
             self.refrescar()
         elif not ok:
-            self.panel.actualizar(None, False)
+            self.panel.actualizar(None, False, api_ok)
+        elif api_ok != api_estaba:
+            self.panel.actualizar(None, True, api_ok)  # conserva las cifras

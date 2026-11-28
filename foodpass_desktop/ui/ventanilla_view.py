@@ -99,7 +99,9 @@ class DialogoCanjeManual(QDialog):
         caja.addWidget(self.input_documento)
         caja.addWidget(etiqueta("Motivo", "etiquetaCampoManual"))
         self.combo_motivo = QComboBox()
-        self.combo_motivo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.combo_motivo.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToContents
+        )
         self.combo_motivo.setMinimumWidth(170)
         self.combo_motivo.setObjectName("comboMotivoManual")
         self.combo_motivo.addItems(MOTIVOS_CANJE_MANUAL)
@@ -192,6 +194,10 @@ class VentanillaView(QWidget):
         self.timer_anular = QTimer(self)
         self.timer_anular.setSingleShot(True)
         self.timer_anular.timeout.connect(self._vencer_anulacion)
+        # Cuenta regresiva visible en el botón «Anular» (RF-ES34: 2 minutos)
+        self.timer_cuenta_anular = QTimer(self)
+        self.timer_cuenta_anular.setInterval(1000)
+        self.timer_cuenta_anular.timeout.connect(self._pintar_boton_anular)
 
         self.setup_ui()
         self.registrar_atajos()
@@ -455,11 +461,15 @@ class VentanillaView(QWidget):
                     "nombre": nombre,
                     "servicio": self.servicio_actual,
                 }
-                self.btn_anular.setVisible(True)
                 self.timer_anular.start(SEGUNDOS_ANULACION * 1000)
+                self.timer_cuenta_anular.start()
+                self._pintar_boton_anular()
+                self.btn_anular.setVisible(True)
             self.canje_registrado.emit()
         elif resultado.tipo == "ya_recibio":
-            self._agregar_lectura(nombre, "ya_recibio", "Ya recibió", self._entrada_actual)
+            self._agregar_lectura(
+                nombre, "ya_recibio", "Ya recibió", self._entrada_actual
+            )
         elif resultado.tipo == "error_conexion":
             self._agregar_lectura("Sin conexión", "error", "Sin conexión")
         else:
@@ -474,6 +484,7 @@ class VentanillaView(QWidget):
 
     def _al_fallar_canje(self, excepcion: Exception):
         self._procesando = False
+        self._agregar_lectura("No se registró", "error", "Error", self._entrada_actual)
         self.tarjeta.mostrar_resultado(
             "error_conexion",
             {
@@ -500,8 +511,19 @@ class VentanillaView(QWidget):
             canje["canje_id"],
             canje["registrado_en"],
             al_exito=self._anulacion_terminada,
-            al_error=self._al_fallar_canje,
+            al_error=self._anulacion_fallida,
         )
+
+    def _anulacion_fallida(self, _excepcion):
+        self.tarjeta.mostrar_resultado(
+            "error_conexion",
+            {
+                "accion": "No se anuló",
+                "mensaje": "No se pudo anular. Inténtalo de nuevo o avisa a soporte técnico.",
+            },
+        )
+        self.timer_limpieza.start(4000)
+        self.input_codigo.setFocus()
 
     def _anulacion_terminada(self, resultado):
         ok, mensaje = resultado
@@ -521,10 +543,28 @@ class VentanillaView(QWidget):
         self._vencer_anulacion()
         self.timer_limpieza.start(4000)
 
+    def _pintar_boton_anular(self):
+        """El botón dice a quién anula y cuánto tiempo queda: si después hubo
+        otra lectura (por ejemplo, un rechazo), no se confunde con esa."""
+        canje = self._ultimo_canje
+        if not canje:
+            return
+        restante = max(0, self.timer_anular.remainingTime() // 1000)
+        nombre = (canje.get("nombre") or "").split()
+        quien = f" de {nombre[0]}" if nombre and nombre[0] != "—" else ""
+        self.btn_anular.setText(
+            f"Anular entrega{quien}  {restante // 60}:{restante % 60:02d}"
+        )
+        self.btn_anular.setToolTip(
+            f"Anula la entrega de {canje.get('nombre', '')}. "
+            "Solo se puede durante los 2 minutos siguientes."
+        )
+
     def _vencer_anulacion(self):
         self._ultimo_canje = None
         self.btn_anular.setVisible(False)
         self.timer_anular.stop()
+        self.timer_cuenta_anular.stop()
 
     # --- últimas lecturas -----------------------------------------------------
     def _agregar_lectura(self, nombre, tipo, texto_badge, detalle=""):
@@ -555,8 +595,12 @@ class VentanillaView(QWidget):
             if detalle:
                 sub = QLabel(detalle)
                 sub.setObjectName("detalleLectura")
-                sub.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-                sub.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+                sub.setTextInteractionFlags(
+                    Qt.TextInteractionFlag.TextSelectableByMouse
+                )
+                sub.setSizePolicy(
+                    QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+                )
                 textos.addWidget(sub)
             fila.addLayout(textos, 1)
             insignia = Badge(badge, tipo)

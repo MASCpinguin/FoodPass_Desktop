@@ -56,6 +56,16 @@ class ClienteApi:
         """
         self._al_expirar = callback
 
+    def alcanzable(self, timeout=2):
+        """¿La API responde? Cualquier respuesta HTTP (incluso 404) cuenta como
+        encendida; solo un fallo de conexión o de tiempo es «sin conexión».
+        Para el indicador de conexión de la ventana principal."""
+        try:
+            self._sesion.get(self._base, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError):
+            return False
+        return True
+
     # --- métodos públicos -----------------------------------------------
     def get(self, ruta, params=None):
         return self._pedir("GET", ruta, params=params)

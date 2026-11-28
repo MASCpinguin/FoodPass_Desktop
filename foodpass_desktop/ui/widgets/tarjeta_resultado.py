@@ -21,9 +21,22 @@ ESTADOS = {
     "ya_recibio": ("✕", "YA RECIBIÓ HOY"),
     "no_beneficiario": ("✕", "NO ESTÁ EN LA BASE"),
     "no_reconocido": ("✕", "CÓDIGO NO RECONOCIDO"),
-    "error_conexion": ("!", "SIN CONEXIÓN"),
+    "error_conexion": ("!", "NO SE REGISTRÓ"),
     "anulado": ("↺", "CANJE ANULADO"),
 }
+
+
+def titulo_codigo_rechazado(mensaje):
+    """Título según el motivo, para que no diga «no reconocido» si el código
+    sí es de FoodPass pero ya se usó o venció."""
+    texto = (mensaje or "").lower()
+    if "usado" in texto or "reemplazado" in texto:
+        return "CÓDIGO YA USADO"
+    if "venció" in texto or "vencido" in texto:
+        return "CÓDIGO VENCIDO"
+    if "no encontrado" in texto:
+        return "CÓDIGO NO ENCONTRADO"
+    return "CÓDIGO NO RECONOCIDO"
 
 
 class TarjetaResultado(QFrame):
@@ -104,7 +117,7 @@ class TarjetaResultado(QFrame):
     def _aplicar_estado(self, estado, **formato):
         self._estado = estado
         icono, titulo = ESTADOS[estado]
-        for w in (self, self.lbl_estado_titulo, self.lbl_nombre):
+        for w in (self, self.lbl_estado_icono, self.lbl_estado_titulo, self.lbl_nombre):
             w.setProperty("estado", estado)
             _refrescar_estilo(w)
         self.lbl_estado_icono.setText(icono)
@@ -115,6 +128,7 @@ class TarjetaResultado(QFrame):
         self.lbl_chip.setVisible(False)
         self.lbl_documento.setVisible(False)
         self.recuadro_foto.setVisible(tipo in ("entregado", "ya_recibio", "reposo"))
+        self.lbl_nombre.setVisible(True)
         nombre = datos.get("nombre", "")
         documento = datos.get("documento", "")
 
@@ -148,10 +162,11 @@ class TarjetaResultado(QFrame):
             )
         elif tipo == "no_reconocido":
             self._aplicar_estado("no_reconocido")
-            self.lbl_nombre.setText("—")
-            self.lbl_detalles.setText(
-                datos.get("mensaje", "No es un código de FoodPass.")
-            )
+            mensaje = datos.get("mensaje", "No es un código de FoodPass.")
+            self.lbl_estado_titulo.setText(titulo_codigo_rechazado(mensaje))
+            # Sin persona que mostrar: no se deja un «—» gigante.
+            self.lbl_nombre.setVisible(False)
+            self.lbl_detalles.setText(mensaje)
         elif tipo == "anulado":
             self._aplicar_estado("anulado")
             self.lbl_nombre.setText(nombre or "Canje anulado")
@@ -160,7 +175,7 @@ class TarjetaResultado(QFrame):
             )
         else:  # error_conexion
             self._aplicar_estado("error_conexion")
-            self.lbl_nombre.setText("Sin conexión")
+            self.lbl_nombre.setText(datos.get("accion", "Vuelve a escanear"))
             self.lbl_detalles.setText(
                 datos.get(
                     "mensaje",
@@ -176,6 +191,7 @@ class TarjetaResultado(QFrame):
     def limpiar(self):
         self._aplicar_estado("reposo")
         self.recuadro_foto.setVisible(True)
+        self.lbl_nombre.setVisible(True)
         self.lbl_nombre.setText("Esperando código")
         self.lbl_documento.setVisible(False)
         self.lbl_chip.setVisible(False)
